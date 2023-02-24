@@ -4,6 +4,8 @@ import logging
 # Class managing list of things.
 from dls_utilpack.things import Things
 
+from rockingest_lib.collectors.constants import Types
+
 # Exceptions.
 from rockingest_lib.exceptions import NotFound
 
@@ -56,20 +58,20 @@ class Collectors(Things):
     def lookup_class(self, class_type):
         """"""
 
-        if class_type == "dls_rockingest_lib.rockingest_collectors.aiohttp":
+        if class_type == Types.AIOHTTP:
             from rockingest_lib.collectors.aiohttp import Aiohttp
 
             return Aiohttp
 
-        elif class_type == "dls_rockingest_lib.rockingest_collectors.manual":
+        elif class_type == Types.MANUAL:
             from rockingest_lib.collectors.manual import Manual
 
             return Manual
 
-        elif class_type == "dls_rockingest_lib.rockingest_collectors.scrape_to_database":
-            from rockingest_lib.collectors.scrape_to_database import ScrapeToDatabase
+        elif class_type == Types.SCRAPE:
+            from rockingest_lib.collectors.scrape import Scrape
 
-            return ScrapeToDatabase
+            return Scrape
 
         else:
             try:

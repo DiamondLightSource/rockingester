@@ -60,13 +60,13 @@ rockingest_dataface_specification: &CHIMPFLOW_DATAFACE_SPECIFICATION
 
 # The rockingest_collector which scans for incoming images.
 rockingest_collector_specification:
-    type: "dls_rockingest_lib.rockingest_collectors.aiohttp"
+    type: "dls_rockingest_lib.collectors.aiohttp"
     type_specific_tbd:
         aiohttp_specification:
             server: *COLLECTOR_SERVER
             client: *COLLECTOR_CLIENT
         actual_collector_specification:
-            type: dls_rockingest_lib.rockingest_collectors.scrape_to_database
+            type: dls_rockingest_lib.collectors.scrape
             type_specific_tbd:
                 directories:
                     - ${CWD}/example_images

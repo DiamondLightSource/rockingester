@@ -4,6 +4,7 @@ import dls_mainiac_lib.version
 import dls_normsql.version
 import dls_servbase_lib.version
 import dls_utilpack.version
+import xchembku_lib.version
 
 import rockingest_lib
 
@@ -28,18 +29,11 @@ def meta(given_meta=None):
     s = {}
     s["rockingest_lib"] = version()
 
-    s.update(dls_servbase_lib.version.meta())
-    s.update(dls_utilpack.version.meta())
     s.update(dls_mainiac_lib.version.meta())
     s.update(dls_normsql.version.meta())
-
-    try:
-        import setproctitle
-
-        setproctitle.__version__
-        s["setproctitle"] = setproctitle.__version__
-    except Exception:
-        s["setproctitle"] = "unavailable"
+    s.update(dls_servbase_lib.version.meta())
+    s.update(dls_utilpack.version.meta())
+    s.update(xchembku_lib.version.meta())
 
     if given_meta is not None:
         given_meta.update(s)

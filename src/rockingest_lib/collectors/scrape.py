@@ -18,11 +18,11 @@ from rockingest_lib.collectors.base import Base as CollectorBase
 
 logger = logging.getLogger(__name__)
 
-thing_type = "rockingest_lib.collectors.scrape_to_database"
+thing_type = "rockingest_lib.collectors.scrape"
 
 
 # ------------------------------------------------------------------------------------------
-class ScrapeToDatabase(CollectorBase):
+class Scrape(CollectorBase):
     """
     Object representing a collector which launches a task using popen for onboard execution.
     """
