@@ -1,0 +1,30 @@
+# ********** Please don't edit this file!
+# ********** It has been generated automatically by dae_devops version 0.5.2.
+# ********** For repository_name rockingest
+
+name: Link Check
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run weekly to check URL links still resolve
+    - cron: "0 8 * * WED"
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install python packages
+        uses: ./.github/actions/install_requirements
+        with:
+          requirements_file: requirements-dev-3.x.txt
+          install_options: -e .[dev]
+
+      - name: Check links
+        run: tox -e docs build -- -b linkcheck
+
+# dae_devops_fingerprint a2d0b4d0a0f67bcf2aec45d3f9961d2c

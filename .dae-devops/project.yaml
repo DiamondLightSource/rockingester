@@ -1,0 +1,21 @@
+# Primary information needed for devops.
+primary:
+    repository_name: rockingest
+    package_name: rockingest_lib
+    one_line_description: "XChem service to apply CHIMP detection for discovery of well center, crystal locatins and suggested drop target."
+    author:
+        name: David Erb
+        email: david.erb@diamond.ac.uk
+    project_urls:
+        GitLab: https://github.com/diamondlightsource/rockingest
+    project_scripts:
+        rockingest: "rockingest_lib.__main__:main"
+        rockingest.cli: "rockingest_cli.main:main"
+    dependencies:
+        - type: pypi
+          list:
+              - xchembku
+              - dls_servbase
+              - dls_mainiac
+              - dls_multiconf
+              - dls_utilpack
