@@ -41,7 +41,8 @@ class Direct(CollectorBase):
         self.__recursive = require(s, type_specific_tbd, "recursive")
 
         # We will use the dataface to discover previously processed files.
-        self.__dataface = xchembku_datafaces_get_default()
+        # We will also insert newly find files into this database.
+        self.__xchembku = xchembku_datafaces_get_default()
 
         # This flag will stop the ticking async task.
         self.__keep_ticking = True
@@ -54,8 +55,9 @@ class Direct(CollectorBase):
         """"""
 
         # Get all the jobs ever done.
-        records = await self.__dataface.query(
-            f"SELECT {CrystalWellFieldnames.FILENAME} FROM {Tablenames.CRYSTAL_WELLS}"
+        # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
+        records = await self.__xchembku.fetch_crystal_wells(
+            [], why="rockingest activate getting all crystal wells ever done"
         )
 
         # Make an initial list of the data labels associated with any job.
@@ -150,21 +152,23 @@ class Direct(CollectorBase):
             await self.flush_inserts(inserts)
 
         error = None
-        target_position_x = None
-        target_position_y = None
         try:
             image = Image.open(filename)
-
             width, height = image.size
         except Exception as exception:
             error = str(exception)
-
             width = None
             height = None
 
         # Add a new insert with the fields in the proper order.
+        # TODO: Implement a bulk-insert when inserting a lot of new rockingest records.
         inserts.append(
-            [filename, error, width, height, target_position_x, target_position_y]
+            {
+                CrystalWellFieldnames.FILENAME: filename,
+                CrystalWellFieldnames.ERROR: error,
+                CrystalWellFieldnames.WIDTH: width,
+                CrystalWellFieldnames.HEIGHT: height,
+            }
         )
 
     # ----------------------------------------------------------------------------------------
@@ -177,16 +181,7 @@ class Direct(CollectorBase):
             return
 
         logger.debug(f"flushing {len(inserts)} inserts")
-        await self.__dataface.execute(
-            f"INSERT INTO {Tablenames.CRYSTAL_WELLS}"
-            f" ({CrystalWellFieldnames.FILENAME},"
-            f" {CrystalWellFieldnames.ERROR},"
-            f" {CrystalWellFieldnames.WIDTH},"
-            f" {CrystalWellFieldnames.HEIGHT},"
-            f" {CrystalWellFieldnames.TARGET_POSITION_X},"
-            f" {CrystalWellFieldnames.TARGET_POSITION_Y})"
-            " VALUES (?, ?, ?, ?, ?, ?)",
-            subs=inserts,
-        )
+
+        await self.__xchembku.create_crystal_wells(inserts)
 
         inserts.clear()
