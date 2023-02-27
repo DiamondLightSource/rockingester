@@ -1,0 +1,48 @@
+type: rockingest_lib.rockingest_contexts.classic
+
+visit:
+    beamline: b29
+    year: 2022
+    visit: cy29757-3
+    directory: /dls/b29/data/2022/cy29757-3
+    # Format to make actual data_filename using data_label as token.
+    data_path_pattern: "/dls/b29/data/2022/cy29757-3/Merlin/{data_label}_data.mib"
+
+logging_settings:
+    console:
+        enabled: True
+        verbose: True
+    logfile:
+        enabled: True
+        directory: ${output_directory}/logfile.log
+    graypy:
+        enabled: False
+        host: 172.23.7.128
+        port: 12201
+        protocol: UDP
+
+# The external access bits.
+external_access_bits:
+    dataface_port: &DATAFACE_PORT 27821
+
+# The rockingest_dataface direct access.
+rockingest_dataface_specification_direct: &ROCKINGEST_DATAFACE_SPECIFICATION_DIRECT
+    type: "rockingest_lib.rockingest_datafaces.direct"
+    database:
+        type: "rockingest_lib.rockingest_databases.normsql"
+        filename: "${output_directory}/rockingest_dataface.sqlite"
+        log_level: "WARNING"
+
+# The rockingest_dataface client/server composite.
+rockingest_dataface_specification: &ROCKINGEST_DATAFACE_SPECIFICATION
+    type: "rockingest_lib.rockingest_datafaces.aiohttp"
+    type_specific_tbd:
+        # The remote rockingest_dataface server access.
+        aiohttp_specification:
+            server_host: "*"
+            client_host: "127.0.0.1"
+            port: *DATAFACE_PORT
+        # The local implementation of the rockingest_dataface.
+        actual_rockingest_dataface_specification: *ROCKINGEST_DATAFACE_SPECIFICATION_DIRECT
+    context:
+        start_as: process

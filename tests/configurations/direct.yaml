@@ -1,0 +1,47 @@
+type: dls_multiconf.classic
+
+# The external access bits.
+external_access_bits:
+    rockingest_server: &ROCKINGEST_SERVER http://*:27922
+    rockingest_client: &ROCKINGEST_CLIENT http://localhost:27922
+
+# The xchembku_dataface direct access.
+xchembku_dataface_specification:
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku_dataface.sqlite"
+        log_level: "WARNING"
+
+# The available rockingests.
+rockingest_specification_manual: &ROCKINGEST_COLLECTOR_SPECIFICATION_MANUAL
+    type: "rockingest_lib.collectors.manual"
+
+# Here testing dynamic import of scraper class.
+rockingest_specification_scraper: &ROCKINGEST_COLLECTOR_SPECIFICATION_SCRAPER
+    type: "rockingest_lib.collectors.scraper"
+    type_specific_tbd:
+        scrape_glob: "set-by-code"
+        scrape_recursive: True
+        workflow_filename_classname: "set-by-code"
+        workflow_constructor_kwargs: "set-by-code"
+
+# The rockingest.
+rockingest_specification:
+    type: "rockingest_lib.collectors.aiohttp"
+    type_specific_tbd:
+        aiohttp_specification:
+            server: *ROCKINGEST_SERVER
+            client: *ROCKINGEST_CLIENT
+        actual_rockingest_specification: *ROCKINGEST_COLLECTOR_SPECIFICATION_SCRAPER
+    context:
+        start_as: process
+
+# The xchembku_dataface direct access.
+xchembku_dataface_specification:
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku_dataface.sqlite"
+        log_level: "WARNING"
+

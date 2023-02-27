@@ -1,14 +1,23 @@
 import logging
 import os
 import tempfile
+from typing import Optional
 
 # Configurator.
+from dls_multiconf_lib.constants import ThingTypes as MulticonfThingTypes
 from dls_multiconf_lib.multiconfs import Multiconfs, multiconfs_set_default
 
 # Utilities.
 from dls_utilpack.visit import get_visit_year
 
+# Environment variables with some extra functionality.
+from rockingest_lib.envvar import Envvar
+
 logger = logging.getLogger(__name__)
+
+
+class ArgKeywords:
+    CONFIGURATION = "configuration"
 
 
 class Base:
@@ -22,9 +31,9 @@ class Base:
         self.__temporary_directory = None
 
     # ----------------------------------------------------------------------------------------
-    def get_multiconf(self):
+    def get_multiconf(self, args_dict: dict):
 
-        rockingest_multiconf = Multiconfs().build_object_from_environment()
+        rockingest_multiconf = self.build_object_from_environment(args_dict=args_dict)
 
         # For convenience, make a temporary directory for this test.
         self.__temporary_directory = tempfile.TemporaryDirectory()
@@ -57,3 +66,58 @@ class Base:
         multiconfs_set_default(rockingest_multiconf)
 
         return rockingest_multiconf
+
+    # ----------------------------------------------------------------------------------------
+    def build_object_from_environment(
+        self,
+        environ: Optional[dict] = None,
+        args_dict: Optional[dict] = None,
+    ):
+
+        configuration_keyword = "configuration"
+
+        multiconf_filename = None
+
+        if args_dict is not None:
+            multiconf_filename = args_dict.get(configuration_keyword)
+
+        if multiconf_filename is not None:
+            # Make sure the path exists.
+            if not os.path.exists(multiconf_filename):
+                raise RuntimeError(
+                    f"unable to find --{configuration_keyword} file {multiconf_filename}"
+                )
+        else:
+            # Get the explicit name of the config file.
+            multiconf_filename = Envvar(
+                Envvar.ROCKINGEST_CONFIGFILE,
+                environ=environ,
+            )
+
+            # Config file is explicitly named?
+            if multiconf_filename.is_set:
+                # Make sure the path exists.
+                multiconf_filename = multiconf_filename.value
+                if not os.path.exists(multiconf_filename):
+                    raise RuntimeError(
+                        f"unable to find {Envvar.ROCKINGEST_CONFIGFILE} {multiconf_filename}"
+                    )
+            # Config file is not explicitly named?
+            else:
+                raise RuntimeError(
+                    f"command line --{configuration_keyword} not given"
+                    f" and environment variable {Envvar.ROCKINGEST_CONFIGFILE} is not set"
+                )
+
+        configurator = Multiconfs().build_object(
+            {
+                "type": MulticonfThingTypes.YAML,
+                "type_specific_tbd": {"filename": multiconf_filename},
+            }
+        )
+
+        configurator.substitute(
+            {"configurator_directory": os.path.dirname(multiconf_filename)}
+        )
+
+        return configurator

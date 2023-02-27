@@ -7,12 +7,7 @@ logger = logging.getLogger(__name__)
 class Envvar:
     """Class which covers environment variables, with default values."""
 
-    CHIMPFLOW_CONFIGFILE = "CHIMPFLOW_CONFIGFILE"
-    XCHEM_BEFLOW_DATA = "XCHEM_BEFLOW_DATA"
-    XCHEM_BEFLOW_DLS_ROOT = "XCHEM_BEFLOW_DLS_ROOT"
-    BEAMLINE = "BEAMLINE"
-    VISIT_YEAR = "VISIT_YEAR"
-    VISIT = "VISIT"
+    ROCKINGEST_CONFIGFILE = "ROCKINGEST_CONFIGFILE"
 
     def __init__(self, name, **kwargs):
 

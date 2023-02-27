@@ -36,23 +36,84 @@ def logging_setup():
     logging.getLogger().setLevel("DEBUG")
 
     # Turn off noisy debug.
+    logging.getLogger("asyncio").setLevel("WARNING")
+    logging.getLogger("pika").setLevel("WARNING")
+    logging.getLogger("stomp").setLevel("WARNING")
+    logging.getLogger("luigi-interface").setLevel("WARNING")
+    logging.getLogger("luigi.rockingest_scheduler").setLevel("INFO")
+    logging.getLogger("urllib3.connectionpool").setLevel("INFO")
+
     logging.getLogger("rockingest_lib.things").setLevel("INFO")
 
     # Messages about starting and stopping services.
     logging.getLogger("rockingest_lib.base_aiohttp").setLevel("INFO")
 
     # All rockingest database sql commands.
-    # logging.getLogger("rockingest_lib.rockingest_databases.aiosqlite").setLevel("INFO")
+    # logging.getLogger("rockingest_lib.rockingest_databases.normsql").setLevel("INFO")
 
     logging.getLogger("rockingest_lib.rockingest_contexts.classic").setLevel("INFO")
+    logging.getLogger("rockingest_lib.rockingest_datafaces.context").setLevel("INFO")
 
     # Registering signal handler.
     logging.getLogger("dls_siggy_lib.signal").setLevel("INFO")
+
+    # Set filter on the ispyb logger to ignore the annoying NOTICE.
+    logging.getLogger("ispyb").addFilter(_ispyb_logging_filter())
 
     # Cover the version.
     # logger.info("\n%s", (json.dumps(version_meta(), indent=4)))
 
     yield None
+
+
+# --------------------------------------------------------------------------------
+class _traitlets_logging_filter:
+    """
+    Python logging filter to remove annoying traitlets messages.
+    These are not super useful to see all the time at the DEBUG level.
+    """
+
+    def filter(self, record):
+
+        if record.levelno == 10:
+            if "jupyter_client/client.py" in record.pathname:
+                return 0
+            if "jupyter_client/connect.py" in record.pathname:
+                return 0
+            if "jupyter_client/manager.py" in record.pathname:
+                return 0
+            if "jupyter_client/provisioning/factory.py" in record.pathname:
+                return 0
+            if "nbclient/client.py" in record.pathname:
+                return 0
+            if "nbconvert/exporters/templateexporter.py" in record.pathname:
+                return 0
+            if "nbconvert/preprocessors/base.py" in record.pathname:
+                return 0
+            if "/nbconvert/preprocessors/coalescestreams.py" in record.pathname:
+                return 0
+
+            # if "" in record.pathname:
+            #     return 0
+
+        return 1
+
+
+# --------------------------------------------------------------------------------
+class _ispyb_logging_filter:
+    """
+    Python logging filter to remove annoying traitlets messages.
+    These are not super useful to see all the time at the DEBUG level.
+    """
+
+    def filter(self, record):
+
+        if record.msg.startswith(
+            "NOTICE: This code uses __future__ functionality in the ISPyB API."
+        ):
+            return 0
+
+        return 1
 
 
 # --------------------------------------------------------------------------------

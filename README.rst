@@ -1,7 +1,7 @@
 rockingest
 =======================================================================
 
-XChem service to apply CHIMP detection for discovery of well center, crystal locatins and suggested drop target.
+XChem Business Knowledge Unit.  Service, Client, API, persistent store.
 
 Installation
 -----------------------------------------------------------------------
