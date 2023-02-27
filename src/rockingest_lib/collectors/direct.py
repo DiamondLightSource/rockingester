@@ -5,6 +5,7 @@ import os
 import time
 
 from dls_utilpack.callsign import callsign
+from dls_utilpack.describe import describe
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
 from PIL import Image
@@ -18,11 +19,11 @@ from rockingest_lib.collectors.base import Base as CollectorBase
 
 logger = logging.getLogger(__name__)
 
-thing_type = "rockingest_lib.collectors.scrape"
+thing_type = "rockingest_lib.collectors.direct"
 
 
 # ------------------------------------------------------------------------------------------
-class Scrape(CollectorBase):
+class Direct(CollectorBase):
     """
     Object representing a collector which launches a task using popen for onboard execution.
     """
@@ -45,6 +46,8 @@ class Scrape(CollectorBase):
         # This flag will stop the ticking async task.
         self.__keep_ticking = True
         self.__tick_future = None
+
+        self.__known_filenames = []
 
     # ----------------------------------------------------------------------------------------
     async def activate(self):
@@ -100,6 +103,7 @@ class Scrape(CollectorBase):
 
         # TODO: Use asyncio tasks to parellize scraping directories.
         for directory in self.__directories:
+            logger.info(f"scraping {directory}")
             await self.scrape_directory(directory, inserts)
 
         # Flush any remaining inserts to the database.
@@ -129,7 +133,7 @@ class Scrape(CollectorBase):
                 self.__known_filenames.append(filename)
                 new_count = new_count + 1
 
-        if new_count > 0:
+        if new_count >= 0:
             seconds = "%0.3f" % (t1 - t0)
             logger.info(
                 f"from {directory} found {new_count} files"

@@ -2,10 +2,10 @@ type: dls_multiconf.classic
 
 # The rockingest direct access.
 rockingest_specification:
-    type: "rockingest_lib.collectors.scrape"
+    type: "rockingest_lib.collectors.direct"
     type_specific_tbd:
         directories:
-            - "/27/rockingest/tests/images"
+            - "${output_directory}/images"
         recursive: True
 
 # The xchembku_dataface direct access.

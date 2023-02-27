@@ -9,4 +9,4 @@ class Commands:
 
 class Types:
     AIOHTTP = "rockingest_lib.collectors.aiohttp"
-    SCRAPE = "rockingest_lib.collectors.scrape"
+    DIRECT = "rockingest_lib.collectors.direct"

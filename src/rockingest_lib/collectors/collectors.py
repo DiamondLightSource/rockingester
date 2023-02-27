@@ -63,10 +63,10 @@ class Collectors(Things):
 
             return Aiohttp
 
-        elif class_type == Types.SCRAPE:
-            from rockingest_lib.collectors.scrape import Scrape
+        elif class_type == Types.DIRECT:
+            from rockingest_lib.collectors.direct import Direct
 
-            return Scrape
+            return Direct
 
         else:
             try:

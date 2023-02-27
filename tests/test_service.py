@@ -7,6 +7,8 @@ import time
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceContext
 
+from rockingest_lib.collectors.collectors import collectors_get_default
+
 # Context creator.
 from rockingest_lib.collectors.context import Context as CollectorContext
 
@@ -59,18 +61,23 @@ class ScraperTester(Base):
         xchembku = xchembku_datafaces_get_default()
 
         # Write some scrape-able files.
-        scan_directory = f"{output_directory}/scan_directory"
+        scan_directory = f"{output_directory}/images"
         os.makedirs(scan_directory)
 
-        rockingest_context = CollectorContext(configuration["rockingest_specification"])
+        rockingest_specification = configuration["rockingest_specification"]
+        rockingest_context = CollectorContext(rockingest_specification)
+        start_as = rockingest_specification.get("start_as")
 
         image_count = 2
         filters = []
 
         # Start the rockingest server.
         async with rockingest_context:
-            # Wait long enough for the collector to activate and start ticking.
-            await asyncio.sleep(2.0)
+            if start_as is None:
+                collectors_get_default().scrape()
+            else:
+                # Wait long enough for the collector to activate and start ticking.
+                await asyncio.sleep(2.0)
 
             # Get all images before we create any of the scrape-able files.
             records = await xchembku.fetch_crystal_wells(filters)
