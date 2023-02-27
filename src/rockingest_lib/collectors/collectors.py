@@ -63,11 +63,6 @@ class Collectors(Things):
 
             return Aiohttp
 
-        elif class_type == Types.MANUAL:
-            from rockingest_lib.collectors.manual import Manual
-
-            return Manual
-
         elif class_type == Types.SCRAPE:
             from rockingest_lib.collectors.scrape import Scrape
 

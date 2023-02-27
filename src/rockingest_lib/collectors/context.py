@@ -50,8 +50,9 @@ class Context(ContextBase):
         """ """
 
         if self.server is not None:
-            # Put in request to shutdown the server.
-            await self.server.client_shutdown()
+            if hasattr(self.server, "client_shutdown"):
+                # Put in request to shutdown the server.
+                await self.server.client_shutdown()
 
         # Clear the global variable.  Important between pytests.
         collectors_set_default(None)
