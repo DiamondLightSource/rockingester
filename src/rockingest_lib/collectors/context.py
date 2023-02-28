@@ -48,6 +48,11 @@ class Context(ContextBase):
         elif self.context_specification.get("start_as") == "process":
             await self.server.start_process()
 
+        # Not running as a service?
+        else:
+            # We need to activate the tick() task.
+            await self.server.activate()
+
         self.__api_context = CollectorContext(self.specification())
         await self.__api_context.aenter()
 
@@ -57,11 +62,20 @@ class Context(ContextBase):
 
         if self.server is not None:
             if self.context_specification.get("start_as") == "process":
+                logger.info(
+                    "[NEWSHUT] in context exit, sending shutdown to client process"
+                )
                 # Put in request to shutdown the server.
                 await self.server.client_shutdown()
+                logger.info(
+                    "[NEWSHUT] in context exit, sent shutdown to client process"
+                )
 
             if self.context_specification.get("start_as") == "coro":
                 await self.server.direct_shutdown()
+
+            if self.context_specification.get("start_as") is None:
+                await self.server.deactivate()
 
         if self.__api_context is not None:
             await self.__api_context.aexit()

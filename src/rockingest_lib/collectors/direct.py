@@ -5,11 +5,10 @@ import os
 import time
 
 from dls_utilpack.callsign import callsign
-from dls_utilpack.describe import describe
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
 from PIL import Image
-from xchembku_api.databases.constants import CrystalWellFieldnames, Tablenames
+from xchembku_api.databases.constants import CrystalWellFieldnames
 
 # Global dataface.
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
@@ -81,6 +80,12 @@ class Direct(CollectorBase):
             self.__keep_ticking = False
             # Wait for the ticking to stop.
             await self.__tick_future
+
+        # Have we got a connection to xchembku?
+        if self.__xchembku is not None:
+            # We need to close this connection.
+            logger.info("[COLSHUT] calling self.__xchembku.close_client_session()")
+            await self.__xchembku.close_client_session()
 
     # ----------------------------------------------------------------------------------------
     async def tick(self):

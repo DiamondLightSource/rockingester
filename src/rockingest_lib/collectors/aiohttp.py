@@ -55,6 +55,8 @@ class Aiohttp(Thing, BaseAiohttp):
         except Exception as exception:
             logger.exception("exception in collector process", exc_info=exception)
 
+        logger.debug(f"[PIDAL] {callsign(self)} is returning from activate_process")
+
     # ----------------------------------------------------------------------------------------
     def activate_thread(self, loop):
         """
@@ -82,11 +84,15 @@ class Aiohttp(Thing, BaseAiohttp):
                 ]
             )
 
+            logger.info("[COLSHUT] calling self.__actual_collector.activate()")
             # Get the local implementation started.
             await self.__actual_collector.activate()
 
             # ----------------------------------------------
+            logger.info("[COLSHUT] calling BaseAiohttp.activate_coro_base(self)")
             await BaseAiohttp.activate_coro_base(self)
+
+            logger.info("[COLSHUT] returning")
 
         except Exception as exception:
             raise RuntimeError(
@@ -97,10 +103,18 @@ class Aiohttp(Thing, BaseAiohttp):
     async def direct_shutdown(self):
         """"""
 
+        logger.info(
+            f"[COLSHUT] in direct_shutdown self.__actual_collector is {self.__actual_collector}"
+        )
+
         # ----------------------------------------------
         if self.__actual_collector is not None:
             # Disconnect our local dataface connection, i.e. the one which holds the database connection.
+            logger.info(f"[COLSHUT] awaiting self.__actual_collector.deactivate()")
             await self.__actual_collector.deactivate()
+            logger.info(
+                f"[COLSHUT] got return from self.__actual_collector.deactivate()"
+            )
 
         # ----------------------------------------------
         # Let the base class stop the server listener.

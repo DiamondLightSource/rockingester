@@ -19,7 +19,20 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestService:
+class TestCollectorDirect:
+    def test(self, constants, logging_setup, output_directory):
+        """
+        Test scraper collector's ability to automatically discover files and push them to xchembku.
+        """
+
+        # Configuration file to use.
+        configuration_file = "tests/configurations/direct.yaml"
+
+        CollectorTester().main(constants, configuration_file, output_directory)
+
+
+# ----------------------------------------------------------------------------------------
+class TestCollectorService:
     def test(self, constants, logging_setup, output_directory):
         """
         Test scraper collector's ability to automatically discover files and push them to xchembku.
@@ -28,11 +41,11 @@ class TestService:
         # Configuration file to use.
         configuration_file = "tests/configurations/service.yaml"
 
-        ServiceTester().main(constants, configuration_file, output_directory)
+        CollectorTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class ServiceTester(Base):
+class CollectorTester(Base):
     """
     Class to test the collector by direct call.
     """
@@ -61,6 +74,10 @@ class ServiceTester(Base):
 
             rockingest_context = CollectorContext(
                 configuration["rockingest_collector_specification"]
+            )
+
+            start_as = configuration["rockingest_collector_specification"].get(
+                "start_as"
             )
 
             image_count = 2
