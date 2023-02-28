@@ -71,7 +71,7 @@ class DirectTester(Base):
                 await collectors_get_default().scrape()
 
                 # Get all images before we create any of the scrape-able files.
-                records = await xchembku.fetch_crystal_wells(filters)
+                records = await xchembku.fetch_crystal_wells_filenames()
 
                 if len(records) != 0:
                     raise RuntimeError(f"found {len(records)} images but expected 0")
@@ -84,7 +84,7 @@ class DirectTester(Base):
 
                 # Get all images.
                 await collectors_get_default().scrape()
-                records = await xchembku.fetch_crystal_wells(filters)
+                records = await xchembku.fetch_crystal_wells_filenames()
 
                 if len(records) != image_count:
                     raise RuntimeError(

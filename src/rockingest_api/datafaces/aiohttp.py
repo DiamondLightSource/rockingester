@@ -51,10 +51,10 @@ class Aiohttp:
         )
 
     # ----------------------------------------------------------------------------------------
-    async def create_crystal_wells(self, records, why=None):
+    async def originate_crystal_wells(self, records):
         """"""
 
-        return await self.__send_protocolj("create_crystal_wells", records, why=why)
+        return await self.__send_protocolj("originate_crystal_wells", records)
 
     # ----------------------------------------------------------------------------------------
     async def update_crystal_wells(self, records, why=None):
@@ -63,10 +63,10 @@ class Aiohttp:
         return await self.__send_protocolj("update_crystal_wells", records, why=why)
 
     # ----------------------------------------------------------------------------------------
-    async def fetch_crystal_wells(self, filters, why=None):
+    async def fetch_crystal_wells_filenames(self, why=None):
         """"""
 
-        return await self.__send_protocolj("fetch_crystal_wells", filters, why=why)
+        return await self.__send_protocolj("fetch_crystal_wells_filenames", why=why)
 
     # ----------------------------------------------------------------------------------------
     async def report_health(self):

@@ -80,7 +80,7 @@ class ScraperTester(Base):
                 await asyncio.sleep(2.0)
 
             # Get all images before we create any of the scrape-able files.
-            records = await xchembku.fetch_crystal_wells(filters)
+            records = await xchembku.fetch_crystal_wells_filenames()
 
             if len(records) != 0:
                 raise RuntimeError(f"found {len(records)} images but expected 0")
@@ -98,7 +98,7 @@ class ScraperTester(Base):
             while True:
 
                 # Get all images.
-                records = await xchembku.fetch_crystal_wells(filters)
+                records = await xchembku.fetch_crystal_wells_filenames()
 
                 if len(records) >= image_count:
                     break
@@ -110,7 +110,7 @@ class ScraperTester(Base):
             # Wait a couple more seconds to make sure there are no extra images appearing.
             await asyncio.sleep(2.0)
             # Get all images.
-            records = await xchembku.fetch_crystal_wells(filters)
+            records = await xchembku.fetch_crystal_wells_filenames()
 
             if len(records) != image_count:
                 raise RuntimeError(
@@ -123,7 +123,7 @@ class ScraperTester(Base):
         async with rockingest_context:
             await asyncio.sleep(2.0)
             # Get all images after servers start up and run briefly.
-            records = await xchembku.fetch_crystal_wells(filters)
+            records = await xchembku.fetch_crystal_wells_filenames()
 
             if len(records) != image_count:
                 raise RuntimeError(

@@ -56,8 +56,8 @@ class Direct(CollectorBase):
 
         # Get all the jobs ever done.
         # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
-        records = await self.__xchembku.fetch_crystal_wells(
-            [], why="rockingest activate getting all crystal wells ever done"
+        records = await self.__xchembku.fetch_crystal_wells_filenames(
+            why="rockingest activate getting all crystal wells ever done"
         )
 
         # Make an initial list of the data labels associated with any job.
@@ -182,6 +182,6 @@ class Direct(CollectorBase):
 
         logger.debug(f"flushing {len(inserts)} inserts")
 
-        await self.__xchembku.create_crystal_wells(inserts)
+        await self.__xchembku.originate_crystal_wells(inserts)
 
         inserts.clear()
