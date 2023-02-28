@@ -1,12 +1,4 @@
-type: rockingest_lib.rockingest_contexts.classic
-
-visit:
-    beamline: b29
-    year: 2022
-    visit: cy29757-3
-    directory: /dls/b29/data/2022/cy29757-3
-    # Format to make actual data_filename using data_label as token.
-    data_path_pattern: "/dls/b29/data/2022/cy29757-3/Merlin/{data_label}_data.mib"
+type: dls_multiconf.classic
 
 logging_settings:
     console:
@@ -23,26 +15,35 @@ logging_settings:
 
 # The external access bits.
 external_access_bits:
-    dataface_port: &DATAFACE_PORT 27821
+    dataface_port: &ROCKINGEST_PORT 27821
 
-# The rockingest_dataface direct access.
-rockingest_dataface_specification_direct: &ROCKINGEST_DATAFACE_SPECIFICATION_DIRECT
-    type: "rockingest_lib.rockingest_datafaces.direct"
-    database:
-        type: "rockingest_lib.rockingest_databases.normsql"
-        filename: "${output_directory}/rockingest_dataface.sqlite"
-        log_level: "WARNING"
-
-# The rockingest_dataface client/server composite.
-rockingest_dataface_specification: &ROCKINGEST_DATAFACE_SPECIFICATION
-    type: "rockingest_lib.rockingest_datafaces.aiohttp"
+# The rockingest direct access.
+rockingest_collector_specification_direct:
+    &rockingest_collector_specification_DIRECT
+    type: "rockingest_lib.collectors.direct"
     type_specific_tbd:
-        # The remote rockingest_dataface server access.
+        directories:
+            - "${output_directory}/images"
+        recursive: True
+
+# The rockingest client/server composite.
+rockingest_collector_specification:
+    type: "rockingest_lib.collectors.aiohttp"
+    type_specific_tbd:
+        # The remote rockingest server access.
         aiohttp_specification:
             server_host: "*"
             client_host: "127.0.0.1"
-            port: *DATAFACE_PORT
-        # The local implementation of the rockingest_dataface.
-        actual_rockingest_dataface_specification: *ROCKINGEST_DATAFACE_SPECIFICATION_DIRECT
+            port: *ROCKINGEST_PORT
+        # The local implementation of the rockingest.
+        actual_collector_specification: *rockingest_collector_specification_DIRECT
     context:
-        start_as: process
+        start_as: coro
+
+# The xchembku_dataface direct access.
+xchembku_dataface_specification:
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku.sqlite"
+        log_level: "WARNING"

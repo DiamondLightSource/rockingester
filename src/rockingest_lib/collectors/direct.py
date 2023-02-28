@@ -105,7 +105,6 @@ class Direct(CollectorBase):
 
         # TODO: Use asyncio tasks to parellize scraping directories.
         for directory in self.__directories:
-            logger.info(f"scraping {directory}")
             await self.scrape_directory(directory, inserts)
 
         # Flush any remaining inserts to the database.
@@ -138,7 +137,7 @@ class Direct(CollectorBase):
         if new_count >= 0:
             seconds = "%0.3f" % (t1 - t0)
             logger.info(
-                f"from {directory} found {new_count} files"
+                f"from {directory} found {new_count} newly actionable files"
                 f" among {len(filenames)} total files in {seconds} seconds"
             )
 
@@ -185,3 +184,9 @@ class Direct(CollectorBase):
         await self.__xchembku.originate_crystal_wells(inserts)
 
         inserts.clear()
+
+    # ----------------------------------------------------------------------------------------
+    async def close_client_session(self):
+        """"""
+
+        pass

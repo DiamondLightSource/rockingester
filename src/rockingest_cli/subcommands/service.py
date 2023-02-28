@@ -3,19 +3,22 @@ import asyncio
 # Use standard logging in this module.
 import logging
 
+# Xchembku client context.
+from xchembku_api.datafaces.context import Context as XchembkuDatafacesContext
+
 # Base class for cli subcommands.
 from rockingest_cli.subcommands.base import ArgKeywords, Base
 
-# Context creator.
+# Rockingest context creator.
 from rockingest_lib.collectors.context import Context
 
 logger = logging.getLogger()
 
 
 # --------------------------------------------------------------
-class Start(Base):
+class Service(Base):
     """
-    Start one or more services and keep them running until ^C.
+    Start single service and keep running until ^C or remotely requested shutdown.
     """
 
     def __init__(self, args, mainiac):
@@ -33,25 +36,19 @@ class Start(Base):
         """"""
 
         # Load the configuration.
-        rockingest_multiconf = self.get_multiconf(vars(self._args))
-        configuration = await rockingest_multiconf.load()
+        multiconf = self.get_multiconf(vars(self._args))
+        configuration = await multiconf.load()
 
-        # Make a service context from the specification in the configuration.
-        context = Context(configuration["rockingest_dataface_specification"])
+        async with XchembkuDatafacesContext(
+            configuration["xchembku_dataface_specification"]
+        ):
+            # Make a service context from the specification in the configuration.
+            context = Context(configuration["rockingest_collector_specification"])
 
-        # Open the context which starts the service process.
-        async with context:
-            try:
-                while True:
-                    await asyncio.sleep(1.0)
-                    if not await context.is_process_started():
-                        logger.info("process is not started")
-                        break
-                    if not await context.is_process_alive():
-                        logger.info("process is not alive")
-                        break
-            except KeyboardInterrupt:
-                pass
+            # Open the context which starts the service process.
+            async with context:
+                # Wait for it to finish.
+                await context.server.wait_for_shutdown()
 
     # ----------------------------------------------------------
     def add_arguments(parser):

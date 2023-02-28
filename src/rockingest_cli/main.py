@@ -8,7 +8,7 @@ import multiprocessing
 from dls_mainiac_lib.mainiac import Mainiac
 
 # The subcommands.
-from rockingest_cli.subcommands.start import Start
+from rockingest_cli.subcommands.service import Service
 
 # The package version.
 from rockingest_cli.version import meta as version_meta
@@ -26,8 +26,8 @@ class Main(Mainiac):
     def run(self):
         """"""
 
-        if self._args.subcommand == "start":
-            Start(self._args, self).run()
+        if self._args.subcommand == "service":
+            Service(self._args, self).run()
 
         else:
             raise RuntimeError("unhandled subcommand %s" % (self._args.subcommand))
@@ -61,8 +61,8 @@ class Main(Mainiac):
         subparsers.required = True
 
         # --------------------------------------------------------------------
-        subparser = subparsers.add_parser("start", help="Start service.")
-        Start.add_arguments(subparser)
+        subparser = subparsers.add_parser("service", help="Start service (blocking).")
+        Service.add_arguments(subparser)
 
         return parser
 

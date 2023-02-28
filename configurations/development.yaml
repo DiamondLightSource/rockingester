@@ -1,4 +1,4 @@
-type: rockingest_lib.rockingest_contexts.classic
+type: dls_multiconf.classic
 
 logging_settings:
     console:
@@ -6,7 +6,7 @@ logging_settings:
         verbose: True
     logfile:
         enabled: True
-        directory: rockingest
+        directory: ${output_directory}/logfile.log
     graypy:
         enabled: False
         host: 172.23.7.128
@@ -15,24 +15,35 @@ logging_settings:
 
 # The external access bits.
 external_access_bits:
-    database_filename: &DATABASE_FILENAME /scratch/${USER}/rockingest/databases/runtime/rockingest.sqlite
-    dataface_server: &ROCKINGEST_DATAFACE_SERVER http://*:27821
-    dataface_client: &ROCKINGEST_DATAFACE_CLIENT http://localhost:27821
+    dataface_port: &ROCKINGEST_PORT 27821
 
-# The rockingest_dataface client/server composite.
-rockingest_dataface_specification:
-    type: "rockingest_lib.rockingest_datafaces.aiohttp"
+# The rockingest direct access.
+rockingest_collector_specification_direct:
+    &rockingest_collector_specification_DIRECT
+    type: "rockingest_lib.collectors.direct"
     type_specific_tbd:
-        # The remote rockingest_dataface server access.
+        directories:
+            - "${output_directory}/images"
+        recursive: True
+
+# The rockingest client/server composite.
+rockingest_collector_specification:
+    type: "rockingest_lib.collectors.aiohttp"
+    type_specific_tbd:
+        # The remote rockingest server access.
         aiohttp_specification:
-            server: *ROCKINGEST_DATAFACE_SERVER
-            client: *ROCKINGEST_DATAFACE_CLIENT
-        # The local implementation of the rockingest_dataface.
-        actual_rockingest_dataface_specification:
-            type: "rockingest_lib.rockingest_datafaces.direct"
-            database:
-                type: "rockingest_lib.rockingest_databases.normsql"
-                filename: *DATABASE_FILENAME
-                log_level: "WARNING"
+            server_host: "*"
+            client_host: "127.0.0.1"
+            port: *ROCKINGEST_PORT
+        # The local implementation of the rockingest.
+        actual_collector_specification: *rockingest_collector_specification_DIRECT
     context:
         start_as: process
+
+# The xchembku_dataface direct access.
+xchembku_dataface_specification:
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku.sqlite"
+        log_level: "WARNING"

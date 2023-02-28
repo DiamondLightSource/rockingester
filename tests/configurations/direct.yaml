@@ -1,7 +1,7 @@
 type: dls_multiconf.classic
 
 # The rockingest direct access.
-rockingest_specification:
+rockingest_collector_specification:
     type: "rockingest_lib.collectors.direct"
     type_specific_tbd:
         directories:

@@ -1,7 +1,5 @@
-import asyncio
 import logging
 import os
-import time
 
 # Things xchembku provides.
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
@@ -60,7 +58,7 @@ class DirectTester(Base):
             os.makedirs(images_directory)
 
             rockingest_context = CollectorContext(
-                configuration["rockingest_specification"]
+                configuration["rockingest_collector_specification"]
             )
 
             image_count = 2
