@@ -3,6 +3,7 @@ import glob
 import logging
 import os
 import time
+from typing import Dict, List
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
@@ -24,7 +25,9 @@ thing_type = "rockingest_lib.collectors.direct"
 # ------------------------------------------------------------------------------------------
 class Direct(CollectorBase):
     """
-    Object representing a collector which launches a task using popen for onboard execution.
+    Object representing an image collector.
+    The behavior is to start a coro task to waken every few seconds and scan for incoming files.
+    Files are pushed to xchembku.
     """
 
     # ----------------------------------------------------------------------------------------
@@ -40,7 +43,7 @@ class Direct(CollectorBase):
         self.__recursive = require(s, type_specific_tbd, "recursive")
 
         # We will use the dataface to discover previously processed files.
-        # We will also insert newly find files into this database.
+        # We will also discovery newly find files into this database.
         self.__xchembku = xchembku_datafaces_get_default()
 
         # This flag will stop the ticking async task.
@@ -50,8 +53,14 @@ class Direct(CollectorBase):
         self.__known_filenames = []
 
     # ----------------------------------------------------------------------------------------
-    async def activate(self):
-        """"""
+    async def activate(self) -> None:
+        """
+        Activate the object.
+
+        This implementation gets the list of filenames already known to the xchembku.
+
+        Then it starts the coro task to awaken every few seconds to scrape the directories.
+        """
 
         # Get all the jobs ever done.
         # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
@@ -72,8 +81,14 @@ class Direct(CollectorBase):
         self.__tick_future = asyncio.get_event_loop().create_task(self.tick())
 
     # ----------------------------------------------------------------------------------------
-    async def deactivate(self):
-        """"""
+    async def deactivate(self) -> None:
+        """
+        Deactivate the object.
+
+        Causes the coro task to stop.
+
+        This implementation then releases resources relating to the xchembku connection.
+        """
 
         if self.__tick_future is not None:
             # Set flag to stop the periodic ticking.
@@ -88,9 +103,13 @@ class Direct(CollectorBase):
             await self.__xchembku.close_client_session()
 
     # ----------------------------------------------------------------------------------------
-    async def tick(self):
+    async def tick(self) -> None:
         """
-        Periodic ticking to check for new work.
+        A coro task which does periodic checking for new files in the directories.
+
+        Stops when flag has been set by other tasks.
+
+        # TODO: Use an event to awaken ticker early to handle stop requests sooner.
         """
 
         while self.__keep_ticking:
@@ -98,27 +117,37 @@ class Direct(CollectorBase):
                 await self.scrape()
             except Exception as exception:
                 logger.error(explain2(exception, "scraping"), exc_info=exception)
+
+            # TODO: Make periodic tick period to be configurable.
             await asyncio.sleep(1.0)
 
     # ----------------------------------------------------------------------------------------
-    async def scrape(self):
+    async def scrape(self) -> None:
         """
-        Scrape the directories looking for new files.
+        Scrape all the configured directories looking for new files.
         """
 
-        inserts = []
+        collection: List[Dict] = []
 
         # TODO: Use asyncio tasks to parellize scraping directories.
         for directory in self.__directories:
-            await self.scrape_directory(directory, inserts)
+            await self.scrape_directory(directory, collection)
 
-        # Flush any remaining inserts to the database.
-        await self.flush_inserts(inserts)
+        # Flush any remaining collection to the database.
+        await self.flush_collection(collection)
 
     # ----------------------------------------------------------------------------------------
-    async def scrape_directory(self, directory, inserts):
+    async def scrape_directory(
+        self,
+        directory: str,
+        collection: List[Dict],
+    ) -> None:
         """
-        Scrape the directory looking for new files.
+        Scrape a single directory looking for new files.
+
+        Adds discovered files to internal list which gets pushed when it reaches a configurable size.
+
+        Also add discovered files to internal list of known files to avoid duplicate pushing.
         """
 
         if not os.path.isdir(directory):
@@ -134,8 +163,8 @@ class Direct(CollectorBase):
                 continue
 
             if filename not in self.__known_filenames:
-                # TODO: Use transaction to batch the insertions of collected images.
-                await self.add_insert(filename, inserts)
+                # Add image to list of collection.
+                await self.add_discovery(filename, collection)
                 self.__known_filenames.append(filename)
                 new_count = new_count + 1
 
@@ -147,13 +176,17 @@ class Direct(CollectorBase):
             )
 
     # ----------------------------------------------------------------------------------------
-    async def add_insert(self, filename, inserts):
+    async def add_discovery(
+        self,
+        filename: str,
+        collection: List[Dict],
+    ) -> None:
         """
-        Add new insert for later flush.
+        Add new discovery for later flush.
         """
 
-        if len(inserts) >= 1000:
-            await self.flush_inserts(inserts)
+        if len(collection) >= 1000:
+            await self.flush_collection(collection)
 
         error = None
         try:
@@ -164,9 +197,8 @@ class Direct(CollectorBase):
             width = None
             height = None
 
-        # Add a new insert with the fields in the proper order.
-        # TODO: Implement a bulk-insert when inserting a lot of new rockingest records.
-        inserts.append(
+        # Add a new discovery to the collection.
+        collection.append(
             {
                 CrystalWellFieldnames.FILENAME: filename,
                 CrystalWellFieldnames.ERROR: error,
@@ -176,19 +208,19 @@ class Direct(CollectorBase):
         )
 
     # ----------------------------------------------------------------------------------------
-    async def flush_inserts(self, inserts):
+    async def flush_collection(self, collection: List[Dict]) -> None:
         """
-        Do the actual inserts by executemany.
+        Send the discovered files to xchembku for storage.
         """
 
-        if len(inserts) == 0:
+        if len(collection) == 0:
             return
 
-        logger.debug(f"flushing {len(inserts)} inserts")
+        logger.debug(f"flushing {len(collection)} collection")
 
-        await self.__xchembku.originate_crystal_wells(inserts)
+        await self.__xchembku.originate_crystal_wells(collection)
 
-        inserts.clear()
+        collection.clear()
 
     # ----------------------------------------------------------------------------------------
     async def close_client_session(self):
