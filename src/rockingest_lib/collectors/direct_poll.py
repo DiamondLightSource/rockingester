@@ -19,11 +19,11 @@ from rockingest_lib.collectors.base import Base as CollectorBase
 
 logger = logging.getLogger(__name__)
 
-thing_type = "rockingest_lib.collectors.direct"
+thing_type = "rockingest_lib.collectors.direct_poll"
 
 
 # ------------------------------------------------------------------------------------------
-class Direct(CollectorBase):
+class DirectPoll(CollectorBase):
     """
     Object representing an image collector.
     The behavior is to start a coro task to waken every few seconds and scan for incoming files.

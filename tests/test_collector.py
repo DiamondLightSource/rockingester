@@ -7,8 +7,6 @@ import time
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceContext
 
-from rockingest_lib.collectors.collectors import collectors_get_default
-
 # Context creator.
 from rockingest_lib.collectors.context import Context as CollectorContext
 
@@ -19,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorDirect:
+class TestCollectorDirectPoll:
     """
     Test collector interface by direct call.
     """
@@ -27,7 +25,7 @@ class TestCollectorDirect:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/direct.yaml"
+        configuration_file = "tests/configurations/direct_poll.yaml"
 
         CollectorTester().main(constants, configuration_file, output_directory)
 
@@ -78,10 +76,6 @@ class CollectorTester(Base):
 
             rockingest_context = CollectorContext(
                 multiconf_dict["rockingest_collector_specification"]
-            )
-
-            start_as = multiconf_dict["rockingest_collector_specification"].get(
-                "start_as"
             )
 
             image_count = 2

@@ -110,10 +110,10 @@ class Aiohttp(Thing, BaseAiohttp):
         # ----------------------------------------------
         if self.__actual_collector is not None:
             # Disconnect our local dataface connection, i.e. the one which holds the database connection.
-            logger.info(f"[COLSHUT] awaiting self.__actual_collector.deactivate()")
+            logger.info("[COLSHUT] awaiting self.__actual_collector.deactivate()")
             await self.__actual_collector.deactivate()
             logger.info(
-                f"[COLSHUT] got return from self.__actual_collector.deactivate()"
+                "[COLSHUT] got return from self.__actual_collector.deactivate()"
             )
 
         # ----------------------------------------------

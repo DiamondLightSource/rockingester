@@ -9,4 +9,4 @@ class Commands:
 
 class Types:
     AIOHTTP = "rockingest_lib.collectors.aiohttp"
-    DIRECT = "rockingest_lib.collectors.direct"
+    DIRECT_POLL = "rockingest_lib.collectors.direct_poll"

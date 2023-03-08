@@ -2,7 +2,7 @@ type: dls_multiconf.classic
 
 # The rockingest direct access.
 rockingest_collector_specification:
-    type: "rockingest_lib.collectors.direct"
+    type: "rockingest_lib.collectors.direct_poll"
     type_specific_tbd:
         directories:
             - "${output_directory}/images"

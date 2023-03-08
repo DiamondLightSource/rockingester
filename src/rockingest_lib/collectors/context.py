@@ -1,5 +1,5 @@
 import logging
-from typing import Dict
+from typing import Any, Dict, Optional
 
 from rockingest_api.collectors.context import Context as CollectorContext
 
@@ -22,8 +22,6 @@ class Context(ContextBase):
     If specified, it starts the server as a coroutine, thread or process.
     If not a server, then it will instatiate a direct access to a collector.
     On exiting, it commands the server to shut down and/or releases the direct access resources.
-
-    The enter and exit methods are exposed for use during testing.
     """
 
     # ----------------------------------------------------------------------------------------
@@ -37,7 +35,7 @@ class Context(ContextBase):
                 All other keys in the specification relate to creating the collector object.
         """
         ContextBase.__init__(self, thing_type, specification)
-        self.__api_context = None
+        self.__api_context: Optional[Any] = None
 
     # ----------------------------------------------------------------------------------------
     async def aenter(self) -> None:
@@ -73,7 +71,7 @@ class Context(ContextBase):
         await self.__api_context.aenter()
 
     # ----------------------------------------------------------------------------------------
-    async def aexit(self):
+    async def aexit(self) -> None:
         """
         Asyncio context exit.
 

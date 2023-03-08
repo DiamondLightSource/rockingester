@@ -66,9 +66,9 @@ class Collectors(Things):
             return Aiohttp
 
         if class_type == Types.DIRECT:
-            from rockingest_lib.collectors.direct import Direct
+            from rockingest_lib.collectors.direct_poll import DirectPoll
 
-            return Direct
+            return DirectPoll
 
         raise NotFound(
             "unable to get rockingest_collector class for type %s" % (class_type)

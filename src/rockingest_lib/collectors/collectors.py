@@ -52,7 +52,7 @@ class Collectors(Things):
     def build_object(
         self,
         specification: Dict,
-        predefined_uuid: Optional[str],
+        predefined_uuid: Optional[str] = None,
     ) -> Any:
         """
         Construct an object from the given specification.
@@ -111,10 +111,10 @@ class Collectors(Things):
 
             return Aiohttp
 
-        elif class_type == Types.DIRECT:
-            from rockingest_lib.collectors.direct import Direct
+        elif class_type == Types.DIRECT_POLL:
+            from rockingest_lib.collectors.direct_poll import DirectPoll
 
-            return Direct
+            return DirectPoll
 
         # Not the nickname of a class type?
         else:
