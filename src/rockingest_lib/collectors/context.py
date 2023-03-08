@@ -1,37 +1,53 @@
 import logging
+from typing import Dict
 
 from rockingest_api.collectors.context import Context as CollectorContext
 
 # Things created in the context.
 from rockingest_lib.collectors.collectors import Collectors, collectors_set_default
 
-# Base class for an asyncio context
+# Base class for an asyncio context.
 from rockingest_lib.contexts.base import Base as ContextBase
 
 logger = logging.getLogger(__name__)
 
 
-thing_type = "rockingest_lib.rockingest_collectors.context"
+thing_type = "rockingest_lib.collectors.context"
 
 
 class Context(ContextBase):
     """
-    Asyncio context for a rockingest_dataface server object.
+    Asyncio context for a collector object.
     On entering, it creates the object according to the specification (a dict).
-    If configured, it starts the server as a coroutine, thread or process.
-    On exiting, it commands the server to shut down.
+    If specified, it starts the server as a coroutine, thread or process.
+    If not a server, then it will instatiate a direct access to a collector.
+    On exiting, it commands the server to shut down and/or releases the direct access resources.
 
     The enter and exit methods are exposed for use during testing.
     """
 
     # ----------------------------------------------------------------------------------------
-    def __init__(self, specification):
+    def __init__(self, specification: Dict):
+        """
+        Constructor.
+
+        Args:
+            specification (Dict): specification of the collector object to be constructed within the context.
+                The only key in the specification that relates to the context is "start_as", which can be "coro", "thread", "process" or None.
+                All other keys in the specification relate to creating the collector object.
+        """
         ContextBase.__init__(self, thing_type, specification)
         self.__api_context = None
 
     # ----------------------------------------------------------------------------------------
-    async def aenter(self):
-        """ """
+    async def aenter(self) -> None:
+        """
+        Asyncio context entry.
+
+        Starts and activates service as specified.
+
+        Establishes the global (singleton-like) default collector.
+        """
 
         # Build the object according to the specification.
         self.server = Collectors().build_object(self.specification())
@@ -58,7 +74,11 @@ class Context(ContextBase):
 
     # ----------------------------------------------------------------------------------------
     async def aexit(self):
-        """ """
+        """
+        Asyncio context exit.
+
+        Stop service if one was started and releases any client resources.
+        """
 
         if self.server is not None:
             if self.context_specification.get("start_as") == "process":
