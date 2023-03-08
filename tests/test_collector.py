@@ -20,10 +20,11 @@ logger = logging.getLogger(__name__)
 
 # ----------------------------------------------------------------------------------------
 class TestCollectorDirect:
+    """
+    Test collector interface by direct call.
+    """
+
     def test(self, constants, logging_setup, output_directory):
-        """
-        Test scraper collector's ability to automatically discover files and push them to xchembku.
-        """
 
         # Configuration file to use.
         configuration_file = "tests/configurations/direct.yaml"
@@ -33,10 +34,11 @@ class TestCollectorDirect:
 
 # ----------------------------------------------------------------------------------------
 class TestCollectorService:
+    """
+    Test collector interface through network interface.
+    """
+
     def test(self, constants, logging_setup, output_directory):
-        """
-        Test scraper collector's ability to automatically discover files and push them to xchembku.
-        """
 
         # Configuration file to use.
         configuration_file = "tests/configurations/service.yaml"
@@ -47,25 +49,27 @@ class TestCollectorService:
 # ----------------------------------------------------------------------------------------
 class CollectorTester(Base):
     """
-    Class to test the collector by direct call.
+    Test scraper collector's ability to automatically discover files and push them to xchembku.
     """
 
     # ----------------------------------------------------------------------------------------
     async def _main_coroutine(self, constants, output_directory):
         """ """
 
-        # Load the configuration.
+        # Get the multiconf from the testing configuration yaml.
         multiconf = self.get_multiconf()
-        configuration = await multiconf.load()
 
-        # Make a context to access the xchembku.
+        # Load the multiconf into a dict.
+        multiconf_dict = await multiconf.load()
+
+        # Reference the dict entry for the xchembku dataface.
         xchembku_context = XchembkuDatafaceContext(
-            configuration["xchembku_dataface_specification"]
+            multiconf_dict["xchembku_dataface_specification"]
         )
 
-        # Make a context to access the xchembku.
+        # Start the xchembku context which includes the direct or network-addressable service.
         async with xchembku_context:
-            # For short, the same singleton the service will use.
+            # Reference the xchembku object which the context has set up as the default.
             xchembku = xchembku_datafaces_get_default()
 
             # Make the scrapable directory.
@@ -73,25 +77,24 @@ class CollectorTester(Base):
             os.makedirs(images_directory)
 
             rockingest_context = CollectorContext(
-                configuration["rockingest_collector_specification"]
+                multiconf_dict["rockingest_collector_specification"]
             )
 
-            start_as = configuration["rockingest_collector_specification"].get(
+            start_as = multiconf_dict["rockingest_collector_specification"].get(
                 "start_as"
             )
 
             image_count = 2
 
-            # Start the rockingest server.
+            # Start the rockingest context which includes the direct or network-addressable service.
             async with rockingest_context:
                 # Wait long enough for the collector to activate and start ticking.
                 await asyncio.sleep(2.0)
 
-                # Get all images before we create any of the scrape-able files.
+                # Get list of images before we create any of the scrape-able files.
                 records = await xchembku.fetch_crystal_wells_filenames()
 
-                if len(records) != 0:
-                    raise RuntimeError(f"found {len(records)} images but expected 0")
+                assert len(records) == 0, "images before any scraping"
 
                 # Create a few scrape-able files.
                 for i in range(10, 10 + image_count):
@@ -122,10 +125,7 @@ class CollectorTester(Base):
                 # Get all images.
                 records = await xchembku.fetch_crystal_wells_filenames()
 
-                if len(records) != image_count:
-                    raise RuntimeError(
-                        f"found {len(records)} images but expected {image_count}"
-                    )
+                assert len(records) == image_count, "images after scraping"
 
             logger.debug("------------ restarting collector --------------------")
             # Start the servers again.
@@ -135,7 +135,4 @@ class CollectorTester(Base):
                 # Get all images after servers start up and run briefly.
                 records = await xchembku.fetch_crystal_wells_filenames()
 
-                if len(records) != image_count:
-                    raise RuntimeError(
-                        f"found {len(records)} images but expected {image_count}"
-                    )
+                assert len(records) == image_count, "images after restarting scraper"
