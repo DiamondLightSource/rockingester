@@ -50,7 +50,7 @@ class Collectors(Things):
             rockingest_collector_object = rockingest_collector_class(specification)
         except Exception as exception:
             raise RuntimeError(
-                "unable to build rockingest_collector object for type %s"
+                "unable to build rockingest collector object for type %s"
                 % (rockingest_collector_class)
             ) from exception
 
@@ -71,5 +71,5 @@ class Collectors(Things):
             return DirectPoll
 
         raise NotFound(
-            "unable to get rockingest_collector class for type %s" % (class_type)
+            f"unable to get rockingest collector class for type {class_type}"
         )

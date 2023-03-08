@@ -18,8 +18,8 @@ external_access_bits:
     dataface_port: &ROCKINGEST_PORT 27821
 
 # The rockingest direct access.
-rockingest_collector_specification_direct:
-    &rockingest_collector_specification_DIRECT
+rockingest_collector_specification_direct_poll:
+    &ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
     type: "rockingest_lib.collectors.direct_poll"
     type_specific_tbd:
         directories:
@@ -36,7 +36,7 @@ rockingest_collector_specification:
             client_host: "127.0.0.1"
             port: *ROCKINGEST_PORT
         # The local implementation of the rockingest.
-        actual_collector_specification: *rockingest_collector_specification_DIRECT
+        direct_collector_specification: *ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
     context:
         start_as: coro
 

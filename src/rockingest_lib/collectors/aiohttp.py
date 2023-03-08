@@ -26,7 +26,11 @@ thing_type = "rockingest_lib.collectors.aiohttp"
 # ------------------------------------------------------------------------------------------
 class Aiohttp(Thing, BaseAiohttp):
     """
-    Object representing a collector which receives tasks from aiohttp.
+    Object representing an image collector.
+    The behavior is to start a direct collector coro task or process
+    to waken every few seconds and scan for incoming files.
+
+    Then start up a web server to handle generic commands and queries.
     """
 
     # ----------------------------------------------------------------------------------------
@@ -36,16 +40,26 @@ class Aiohttp(Thing, BaseAiohttp):
             self, specification["type_specific_tbd"]["aiohttp_specification"]
         )
 
-        self.__actual_collector = None
+        self.__direct_collector = None
 
     # ----------------------------------------------------------------------------------------
-    def callsign(self):
-        """"""
+    def callsign(self) -> str:
+        """
+        Put the class name into the base class's call sign.
+
+        Returns:
+            str: call sign withi class name in it
+        """
+
         return "%s %s" % ("Collector.Aiohttp", BaseAiohttp.callsign(self))
 
     # ----------------------------------------------------------------------------------------
-    def activate_process(self):
-        """"""
+    def activate_process(self) -> None:
+        """
+        Activate the direct collector and web server in a new process.
+
+        Meant to be called from inside a newly started process.
+        """
 
         try:
             multiprocessing.current_process().name = "collector"
@@ -58,9 +72,11 @@ class Aiohttp(Thing, BaseAiohttp):
         logger.debug(f"[PIDAL] {callsign(self)} is returning from activate_process")
 
     # ----------------------------------------------------------------------------------------
-    def activate_thread(self, loop):
+    def activate_thread(self, loop) -> None:
         """
-        Called from inside a newly created thread.
+        Activate the direct collector and web server in a new thread.
+
+        Meant to be called from inside a newly created thread.
         """
 
         try:
@@ -74,19 +90,22 @@ class Aiohttp(Thing, BaseAiohttp):
             )
 
     # ----------------------------------------------------------------------------------------
-    async def activate_coro(self):
-        """"""
+    async def activate_coro(self) -> None:
+        """
+        Activate the direct collector and web server in a two asyncio tasks.
+        """
+
         try:
             # Build a local collector for our back-end.
-            self.__actual_collector = Collectors().build_object(
+            self.__direct_collector = Collectors().build_object(
                 self.specification()["type_specific_tbd"][
-                    "actual_collector_specification"
+                    "direct_collector_specification"
                 ]
             )
 
-            logger.info("[COLSHUT] calling self.__actual_collector.activate()")
+            logger.info("[COLSHUT] calling self.__direct_collector.activate()")
             # Get the local implementation started.
-            await self.__actual_collector.activate()
+            await self.__direct_collector.activate()
 
             # ----------------------------------------------
             logger.info("[COLSHUT] calling BaseAiohttp.activate_coro_base(self)")
@@ -100,61 +119,29 @@ class Aiohttp(Thing, BaseAiohttp):
             ) from exception
 
     # ----------------------------------------------------------------------------------------
-    async def direct_shutdown(self):
-        """"""
+    async def direct_shutdown(self) -> None:
+        """
+        Shut down any started sub-process or coro tasks.
 
+        Then call the base_direct_shutdown to shut down the webserver.
+
+        """
         logger.info(
-            f"[COLSHUT] in direct_shutdown self.__actual_collector is {self.__actual_collector}"
+            f"[COLSHUT] in direct_shutdown self.__direct_collector is {self.__direct_collector}"
         )
 
         # ----------------------------------------------
-        if self.__actual_collector is not None:
+        if self.__direct_collector is not None:
             # Disconnect our local dataface connection, i.e. the one which holds the database connection.
-            logger.info("[COLSHUT] awaiting self.__actual_collector.deactivate()")
-            await self.__actual_collector.deactivate()
+            logger.info("[COLSHUT] awaiting self.__direct_collector.deactivate()")
+            await self.__direct_collector.deactivate()
             logger.info(
-                "[COLSHUT] got return from self.__actual_collector.deactivate()"
+                "[COLSHUT] got return from self.__direct_collector.deactivate()"
             )
 
         # ----------------------------------------------
         # Let the base class stop the server listener.
         await self.base_direct_shutdown()
-
-    # ----------------------------------------------------------------------------------------
-    # From http client, request server to submit task for execution.
-
-    # async def fire(self, message):
-    #     """"""
-    #     # Build a local collector for our client side.
-    #     actual_collector = Collectors().build_object(
-    #         self.specification()["type_specific_tbd"][
-    #             "actual_collector_specification"
-    #         ]
-    #     )
-
-    #     logger.debug(f"[DMOTF] firing actual {callsign(actual_collector)}")
-    #     await actual_collector.fire(message)
-    #     logger.debug("[DMOTF] firing complete")
-
-    # ----------------------------------------------------------------------------------------
-    async def fire(self, message):
-        """"""
-        return await self.__send_protocolj("fire", message)
-
-    # ----------------------------------------------------------------------------------------
-    async def __send_protocolj(self, function, *args, **kwargs):
-        """"""
-
-        return await self.client_protocolj(
-            {
-                Keywords.COMMAND: Commands.EXECUTE,
-                Keywords.PAYLOAD: {
-                    "function": function,
-                    "args": args,
-                    "kwargs": kwargs,
-                },
-            },
-        )
 
     # ----------------------------------------------------------------------------------------
     async def __do_locally(self, function, args, kwargs):
@@ -164,7 +151,7 @@ class Aiohttp(Thing, BaseAiohttp):
         # logger.info(describe("args", args))
         # logger.info(describe("kwargs", kwargs))
 
-        function = getattr(self.__actual_collector, function)
+        function = getattr(self.__direct_collector, function)
 
         response = await function(*args, **kwargs)
 
