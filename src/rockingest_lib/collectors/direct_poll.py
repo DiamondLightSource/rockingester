@@ -14,6 +14,9 @@ from xchembku_api.databases.constants import CrystalWellFieldnames
 # Global dataface.
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 
+# Crystal well pydantic model.
+from xchembku_api.models.crystal_well_model import CrystalWellModel
+
 # Base class for collector instances.
 from rockingest_lib.collectors.base import Base as CollectorBase
 
@@ -64,18 +67,19 @@ class DirectPoll(CollectorBase):
 
         # Get all the jobs ever done.
         # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
-        records = await self.__xchembku.fetch_crystal_wells_filenames(
+        models: List[
+            CrystalWellModel
+        ] = await self.__xchembku.fetch_crystal_wells_filenames(
             why="rockingest activate getting all crystal wells ever done"
         )
 
         # Make an initial list of the data labels associated with any job.
         self.__known_filenames = []
-        for record in records:
-            filename = record["filename"]
-            if filename not in self.__known_filenames:
-                self.__known_filenames.append(filename)
+        for model in models:
+            if model.filename not in self.__known_filenames:
+                self.__known_filenames.append(model.filename)
 
-        logger.debug(f"activating with {len(records)} known filenames")
+        logger.debug(f"activating with {len(models)} known filenames")
 
         # Poll periodically.
         self.__tick_future = asyncio.get_event_loop().create_task(self.tick())
@@ -127,7 +131,7 @@ class DirectPoll(CollectorBase):
         Scrape all the configured directories looking for new files.
         """
 
-        collection: List[Dict] = []
+        collection: List[CrystalWellModel] = []
 
         # TODO: Use asyncio tasks to parellize scraping directories.
         for directory in self.__directories:
@@ -140,7 +144,7 @@ class DirectPoll(CollectorBase):
     async def scrape_directory(
         self,
         directory: str,
-        collection: List[Dict],
+        collection: List[CrystalWellModel],
     ) -> None:
         """
         Scrape a single directory looking for new files.
@@ -179,7 +183,7 @@ class DirectPoll(CollectorBase):
     async def add_discovery(
         self,
         filename: str,
-        collection: List[Dict],
+        collection: List[CrystalWellModel],
     ) -> None:
         """
         Add new discovery for later flush.
@@ -199,16 +203,16 @@ class DirectPoll(CollectorBase):
 
         # Add a new discovery to the collection.
         collection.append(
-            {
-                CrystalWellFieldnames.FILENAME: filename,
-                CrystalWellFieldnames.ERROR: error,
-                CrystalWellFieldnames.WIDTH: width,
-                CrystalWellFieldnames.HEIGHT: height,
-            }
+            CrystalWellModel(
+                filename=filename,
+                error=error,
+                width=width,
+                height=height,
+            )
         )
 
     # ----------------------------------------------------------------------------------------
-    async def flush_collection(self, collection: List[Dict]) -> None:
+    async def flush_collection(self, collection: List[CrystalWellModel]) -> None:
         """
         Send the discovered files to xchembku for storage.
         """
@@ -216,8 +220,9 @@ class DirectPoll(CollectorBase):
         if len(collection) == 0:
             return
 
-        logger.debug(f"flushing {len(collection)} collection")
+        logger.debug(f"flushing {len(collection)} from collection")
 
+        # Here we originate the crystal well records into xchembku.
         await self.__xchembku.originate_crystal_wells(collection)
 
         collection.clear()
