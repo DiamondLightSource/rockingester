@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Installing &#8212; rockingest 0.1.dev17+g4c1c7f6 documentation</title>
+    <title>TODO &#8212; rockingest 0.1.dev17+g4c1c7f6 documentation</title>
   
   
   
@@ -49,12 +49,12 @@
     <script src="../../_static/copybutton.js"></script>
     <script src="../../_static/design-tabs.js"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
-    <script>DOCUMENTATION_OPTIONS.pagename = 'user/how-to/01-installing_development';</script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'user/explanations/51-todo';</script>
     <link rel="shortcut icon" href="../../_static/dls-favicon.ico"/>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Developing" href="../explanations/22-developing.html" />
-    <link rel="prev" title="Tutorials" href="../tutorials/tbd.html" />
+    <link rel="next" title="API" href="../reference/api.html" />
+    <link rel="prev" title="About the documentation" href="25-docs-structure.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -294,16 +294,16 @@ document.write(`
 <li class="toctree-l1"><a class="reference internal" href="../tutorials/tbd.html">Tutorials</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">How-to Guides</span></p>
-<ul class="current nav bd-sidenav">
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Installing</a></li>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="../how-to/01-installing_development.html">Installing</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Explanations</span></p>
-<ul class="nav bd-sidenav">
-<li class="toctree-l1"><a class="reference internal" href="../explanations/22-developing.html">Developing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../explanations/23-testing.html">Testing</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../explanations/24-devops.html">Devops</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../explanations/25-docs-structure.html">About the documentation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../explanations/51-todo.html">TODO</a></li>
+<ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="22-developing.html">Developing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="23-testing.html">Testing</a></li>
+<li class="toctree-l1"><a class="reference internal" href="24-devops.html">Devops</a></li>
+<li class="toctree-l1"><a class="reference internal" href="25-docs-structure.html">About the documentation</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">TODO</a></li>
 </ul>
 <p aria-level="2" class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="nav bd-sidenav">
@@ -353,7 +353,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="../index.html" class="nav-link">User Guide</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">Installing</li>
+    <li class="breadcrumb-item active" aria-current="page">TODO</li>
   </ul>
 </nav>
 </div>
@@ -370,40 +370,13 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <section id="installing">
-<h1>Installing<a class="headerlink" href="#installing" title="Permalink to this heading">#</a></h1>
-<p>You will need python 3.9 or later.</p>
-<p>On a Diamond Light Source internal computer, you can achieve Python 3.9 by:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ module load python/3.9
-</pre></div>
-</div>
-<p>You can check your version of python by typing into a terminal:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 --version
-</pre></div>
-</div>
-<p>It is recommended that you install into a virtual environment so this
-installation will not interfere with any existing Python software:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 -m venv /scratch/$USER/myvenv
-$ source /scratch/$USER/myvenv/bin/activate
-$ pip install --upgrade pip
-</pre></div>
-</div>
-<p>You can now use <code class="docutils literal notranslate"><span class="pre">pip</span></code> to install the library and its dependencies:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ export PIP_FIND_LINKS=/dls_sw/apps/bxflow/artifacts
-$ python3 -m pip install rockingest
-</pre></div>
-</div>
-<p>If you require a feature that is not currently released you can also install
-from git:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ python3 -m pip install git+https://github.com/diamondlightsource/rockingest/rockingest.git
-</pre></div>
-</div>
-<p>The library should now be installed and the commandline interface on your path.
-You can check the version that has been installed by typing:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ rockingest --version
-$ rockingest --version-json
-</pre></div>
-</div>
+  <section id="todo">
+<h1>TODO<a class="headerlink" href="#todo" title="Permalink to this heading">#</a></h1>
+<p>The following things are known bugs that could use some attention:</p>
+<ul class="simple">
+<li><p>Implement a bulk-insert when inserting a lot of new rockingest records.</p></li>
+<li><p>Avoid needing to fetch all rockingest records and matching to all disk files.</p></li>
+</ul>
 </section>
 
 
@@ -415,20 +388,20 @@ $ rockingest --version-json
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
-       href="../tutorials/tbd.html"
+       href="25-docs-structure.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Tutorials</p>
+        <p class="prev-next-title">About the documentation</p>
       </div>
     </a>
     <a class="right-next"
-       href="../explanations/22-developing.html"
+       href="../reference/api.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Developing</p>
+        <p class="prev-next-title">API</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
