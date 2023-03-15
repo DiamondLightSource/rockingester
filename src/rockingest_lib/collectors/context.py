@@ -1,8 +1,6 @@
 import logging
 from typing import Any, Dict, Optional
 
-from rockingest_api.collectors.context import Context as CollectorContext
-
 # Things created in the context.
 from rockingest_lib.collectors.collectors import Collectors, collectors_set_default
 
@@ -35,7 +33,6 @@ class Context(ContextBase):
                 All other keys in the specification relate to creating the collector object.
         """
         ContextBase.__init__(self, thing_type, specification)
-        self.__api_context: Optional[Any] = None
 
     # ----------------------------------------------------------------------------------------
     async def aenter(self) -> None:
@@ -63,12 +60,9 @@ class Context(ContextBase):
             await self.server.start_process()
 
         # Not running as a service?
-        else:
+        elif self.context_specification.get("start_as") is None:
             # We need to activate the tick() task.
             await self.server.activate()
-
-        self.__api_context = CollectorContext(self.specification())
-        await self.__api_context.aenter()
 
     # ----------------------------------------------------------------------------------------
     async def aexit(self) -> None:
@@ -94,9 +88,3 @@ class Context(ContextBase):
 
             if self.context_specification.get("start_as") is None:
                 await self.server.deactivate()
-
-        if self.__api_context is not None:
-            await self.__api_context.aexit()
-
-        # Clear the global variable.  Important between pytests.
-        collectors_set_default(None)
