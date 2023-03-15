@@ -1,5 +1,5 @@
 import logging
-from typing import Any, Dict, Optional
+from typing import Dict
 
 # Things created in the context.
 from rockingest_lib.collectors.collectors import Collectors, collectors_set_default

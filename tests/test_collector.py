@@ -3,9 +3,8 @@ import logging
 import os
 import time
 
-from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
-
 # Things xchembku provides.
+from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 
 # Client context creator.
@@ -61,9 +60,6 @@ class CollectorTester(Base):
         # Get the multiconf from the testing configuration yaml.
         multiconf = self.get_multiconf()
 
-        # Get the multiconf from the testing configuration yaml.
-        multiconf = self.get_multiconf()
-
         # Load the multiconf into a dict.
         multiconf_dict = await multiconf.load()
 
@@ -114,9 +110,6 @@ class CollectorTester(Base):
         images_directory = f"{output_directory}/images"
         os.makedirs(images_directory)
 
-        # Wait long enough for the collector to activate and start ticking.
-        await asyncio.sleep(2.0)
-
         # Get list of images before we create any of the scrape-able files.
         records = await xchembku.fetch_crystal_wells_filenames()
 
@@ -142,7 +135,8 @@ class CollectorTester(Base):
 
             if time.time() - time0 > timeout:
                 raise RuntimeError(
-                    f"only {len(records)} images out of {image_count} registered within {timeout} seconds"
+                    f"only {len(records)} images out of {image_count}"
+                    f" registered within {timeout} seconds"
                 )
             await asyncio.sleep(1.0)
 
