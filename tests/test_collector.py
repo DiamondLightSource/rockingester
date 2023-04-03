@@ -84,9 +84,9 @@ class CollectorTester(Base):
 
         # Start the client context for the direct access to the xchembku.
         async with xchembku_client_context:
-            # Start the matching xchembku client context.
+            # Start the collector client context.
             async with collector_client_context:
-                # Start the collector server context.
+                # And the collector server context which starts the coro.
                 async with collector_server_context:
                     await self.__run_part1(image_count, constants, output_directory)
 
