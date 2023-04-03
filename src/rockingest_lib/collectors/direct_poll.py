@@ -3,13 +3,12 @@ import glob
 import logging
 import os
 import time
-from typing import Dict, List
+from typing import List
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
 from PIL import Image
-from xchembku_api.databases.constants import CrystalWellFieldnames
 
 # Global dataface.
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
