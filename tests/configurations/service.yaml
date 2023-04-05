@@ -17,6 +17,14 @@ logging_settings:
 external_access_bits:
     dataface_port: &ROCKINGEST_PORT 27821
 
+# The xchembku_dataface direct access.
+xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku.sqlite"
+        log_level: "WARNING"
+
 # The rockingest direct access.
 rockingest_collector_specification_direct_poll:
     &ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
@@ -25,6 +33,7 @@ rockingest_collector_specification_direct_poll:
         directories:
             - "${output_directory}/images"
         recursive: True
+        xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
 
 # The rockingest client/server composite.
 rockingest_collector_specification:
@@ -38,12 +47,4 @@ rockingest_collector_specification:
         # The local implementation of the rockingest.
         direct_collector_specification: *ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
     context:
-        start_as: coro
-
-# The xchembku_dataface direct access.
-xchembku_dataface_specification:
-    type: "xchembku_lib.xchembku_datafaces.direct"
-    database:
-        type: "xchembku_lib.xchembku_databases.normsql"
-        filename: "${output_directory}/xchembku.sqlite"
-        log_level: "WARNING"
+        start_as: process

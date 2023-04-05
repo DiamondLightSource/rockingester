@@ -1,5 +1,13 @@
 type: dls_multiconf.classic
 
+# The xchembku_dataface direct access.
+xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "xchembku_lib.xchembku_databases.normsql"
+        filename: "${output_directory}/xchembku.sqlite"
+        log_level: "WARNING"
+
 # The rockingest direct access.
 rockingest_collector_specification:
     type: "rockingest_lib.collectors.direct_poll"
@@ -7,11 +15,4 @@ rockingest_collector_specification:
         directories:
             - "${output_directory}/images"
         recursive: True
-
-# The xchembku_dataface direct access.
-xchembku_dataface_specification:
-    type: "xchembku_lib.xchembku_datafaces.direct"
-    database:
-        type: "xchembku_lib.xchembku_databases.normsql"
-        filename: "${output_directory}/xchembku.sqlite"
-        log_level: "WARNING"
+        xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION

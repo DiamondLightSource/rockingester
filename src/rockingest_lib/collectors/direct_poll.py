@@ -10,8 +10,8 @@ from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
 from PIL import Image
 
-# Global dataface.
-from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
+# Dataface client context.
+from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 
 # Crystal well pydantic model.
 from xchembku_api.models.crystal_well_model import CrystalWellModel
@@ -46,7 +46,8 @@ class DirectPoll(CollectorBase):
 
         # We will use the dataface to discover previously processed files.
         # We will also discovery newly find files into this database.
-        self.__xchembku = xchembku_datafaces_get_default()
+        self.__xchembku_client_context = None
+        self.__xchembku = None
 
         # This flag will stop the ticking async task.
         self.__keep_ticking = True
@@ -63,6 +64,25 @@ class DirectPoll(CollectorBase):
 
         Then it starts the coro task to awaken every few seconds to scrape the directories.
         """
+
+        # Make the xchembku client context.
+        s = require(
+            f"{callsign(self)} specification",
+            self.specification(),
+            "type_specific_tbd",
+        )
+        s = require(
+            f"{callsign(self)} type_specific_tbd",
+            s,
+            "xchembku_dataface_specification",
+        )
+        self.__xchembku_client_context = XchembkuDatafaceClientContext(s)
+
+        # Activate the context.
+        await self.__xchembku_client_context.aenter()
+
+        # Get a reference to the xchembku interface provided by the context.
+        self.__xchembku = self.__xchembku_client_context.get_interface()
 
         # Get all the jobs ever done.
         # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
@@ -99,11 +119,14 @@ class DirectPoll(CollectorBase):
             # Wait for the ticking to stop.
             await self.__tick_future
 
-        # Have we got a connection to xchembku?
-        if self.__xchembku is not None:
-            # We need to close this connection.
-            logger.info("[COLSHUT] calling self.__xchembku.close_client_session()")
-            await self.__xchembku.close_client_session()
+        # Forget we have an xchembku client reference.
+        self.__xchembku = None
+
+        if self.__xchembku_client_context is not None:
+            logger.debug(f"[ECHDON] {callsign(self)} exiting __xchembku_client_context")
+            await self.__xchembku_client_context.aexit()
+            logger.debug(f"[ECHDON] {callsign(self)} exited __xchembku_client_context")
+            self.__xchembku_client_context = None
 
     # ----------------------------------------------------------------------------------------
     async def tick(self) -> None:
