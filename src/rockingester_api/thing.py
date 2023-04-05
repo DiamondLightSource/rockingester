@@ -4,7 +4,7 @@ import uuid
 from typing import Any, Dict
 
 # Exeptions.
-from rockingest_api.exceptions import NotFound
+from rockingester_api.exceptions import NotFound
 
 logger = logging.getLogger()
 

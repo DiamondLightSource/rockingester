@@ -2,7 +2,7 @@ import logging
 
 import dls_mainiac_lib.version
 
-import rockingest_lib.version
+import rockingester_lib.version
 
 from . import __version__
 
@@ -25,8 +25,8 @@ def meta(given_meta=None):
     Adds version information to given meta, if any.
     """
     s = {}
-    s["rockingest_cli"] = version()
-    s.update(rockingest_lib.version.meta())
+    s["rockingester_cli"] = version()
+    s.update(rockingester_lib.version.meta())
     s.update(dls_mainiac_lib.version.meta())
 
     if given_meta is not None:

@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 About the documentation
 -----------------------
@@ -21,4 +21,4 @@ improve most documentation - often immensely.
 
 `More information on this topic. <https://documentation.divio.com>`_
 
-.. # dae_devops_fingerprint 872296e49863b9aa9dafdd68682408b4
+.. # dae_devops_fingerprint fe2e1c7c54f2d82f4b136eda337d6318

@@ -2,10 +2,10 @@
 
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 me=${BASH_SOURCE}
-echo "${me}: installing 0 dependencies for repository_name rockingest"
+echo "${me}: installing 0 dependencies for repository_name rockingester"
 
 function __install {
     echo ${me}: "$@"
@@ -13,4 +13,4 @@ function __install {
 }
 
 
-# dae_devops_fingerprint 09687577ddd5ac94f85769bf6696a237
+# dae_devops_fingerprint 0280b6c4df49bbacf2c856949bad2354

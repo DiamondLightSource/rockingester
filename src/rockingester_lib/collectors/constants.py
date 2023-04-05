@@ -8,5 +8,5 @@ class Commands:
 
 
 class Types:
-    AIOHTTP = "rockingest_lib.collectors.aiohttp"
-    DIRECT_POLL = "rockingest_lib.collectors.direct_poll"
+    AIOHTTP = "rockingester_lib.collectors.aiohttp"
+    DIRECT_POLL = "rockingester_lib.collectors.direct_poll"

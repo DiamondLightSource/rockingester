@@ -7,10 +7,10 @@ import logging
 from xchembku_api.datafaces.context import Context as XchembkuDatafacesContext
 
 # Base class for cli subcommands.
-from rockingest_cli.subcommands.base import ArgKeywords, Base
+from rockingester_cli.subcommands.base import ArgKeywords, Base
 
-# Rockingest context creator.
-from rockingest_lib.collectors.context import Context
+# Rockingester context creator.
+from rockingester_lib.collectors.context import Context
 
 logger = logging.getLogger()
 
@@ -43,7 +43,7 @@ class Service(Base):
             configuration["xchembku_dataface_specification"]
         ):
             # Make a service context from the specification in the configuration.
-            context = Context(configuration["rockingest_collector_specification"])
+            context = Context(configuration["rockingester_collector_specification"])
 
             # Open the context which starts the service process.
             async with context:

@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 Testing
 =======================================================================
@@ -27,7 +27,7 @@ If you want to see more output of the test while it's running you can do:
 
 Each test will write files into its own directory::
 
-    /tmp/rockingest/tests/....
+    /tmp/rockingester/tests/....
 
 The tests clear their directory when they start, but not when they finish.
 This allows peeking in there to see what's been written by the test.
@@ -35,4 +35,4 @@ This allows peeking in there to see what's been written by the test.
     
 
 
-.. # dae_devops_fingerprint 89a154b93d08d223372dafd6c9f41062
+.. # dae_devops_fingerprint e291ebd21ffbd2fccba82caa307a9a10

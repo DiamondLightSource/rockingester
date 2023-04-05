@@ -1,7 +1,7 @@
 import json
 from argparse import ArgumentParser
 
-from rockingest_lib.version import meta, version
+from rockingester_lib.version import meta, version
 
 
 def get_parser():

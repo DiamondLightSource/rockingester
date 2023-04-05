@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 variables:
   # I put the package_pip artifacts int his place just until I can use the corporate internal pipserver.
@@ -87,4 +87,4 @@ package_pip:
 #     # The validate_docs artifacts are in the build/html folder.
 #     - make -f .dae-devops/Makefile publish_docs
 
-# dae_devops_fingerprint a773e60bf0b24e60bdfb9e98b4bbc444
+# dae_devops_fingerprint bad18a3b7cc867275610b56fff20dab4

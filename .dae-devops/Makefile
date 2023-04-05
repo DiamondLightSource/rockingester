@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 # ---------------------------------------------------------------------
 # These make targets are designed to be called from the command line and from .gitlab-ci.yml.
@@ -12,7 +12,7 @@ PIP_FIND_LINKS = /dls_sw/apps/bxflow/artifacts
 
 # I got these from https://gitlab.diamond.ac.uk/controls/reports/ci_templates/-/blob/master/defaults.yml.
 # Directory where docs are published.
-DOCS_PUBLISH_ROOT = /dls/cs-www/reports/gitlab-ci/rockingest
+DOCS_PUBLISH_ROOT = /dls/cs-www/reports/gitlab-ci/rockingester
 
 # ---------------------------------------------------------------------
 # These are called from the default before_script in the gitlab CI.
@@ -69,4 +69,4 @@ publish_docs:
 	cp -r build/html/* $(DOCS_PUBLISH_ROOT)
 	
 
-# dae_devops_fingerprint fbe0002057e95b6602e79535cc7c1f5b
+# dae_devops_fingerprint 325d6369d86a2cdf15b3d6b37f5412ac

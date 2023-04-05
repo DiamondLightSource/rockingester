@@ -7,7 +7,7 @@ import logging
 from dls_utilpack.import_class import import_class
 
 # Exceptions.
-from rockingest_api.exceptions import DuplicateUuidException, NotFound
+from rockingester_api.exceptions import DuplicateUuidException, NotFound
 
 logger = logging.getLogger(__name__)
 

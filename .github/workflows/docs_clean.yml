@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 name: Docs Cleanup CI
 
@@ -46,4 +46,4 @@ jobs:
           git commit -am "Removing redundant docs version $DOCS_VERSION"
           git push
 
-# dae_devops_fingerprint 95a3a316e4299c19858949f2af825eed
+# dae_devops_fingerprint c9ae67b812184877e541e0abdd8244dd

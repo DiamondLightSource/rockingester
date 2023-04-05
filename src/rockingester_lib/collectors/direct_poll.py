@@ -17,11 +17,11 @@ from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientCont
 from xchembku_api.models.crystal_well_model import CrystalWellModel
 
 # Base class for collector instances.
-from rockingest_lib.collectors.base import Base as CollectorBase
+from rockingester_lib.collectors.base import Base as CollectorBase
 
 logger = logging.getLogger(__name__)
 
-thing_type = "rockingest_lib.collectors.direct_poll"
+thing_type = "rockingester_lib.collectors.direct_poll"
 
 
 # ------------------------------------------------------------------------------------------
@@ -85,11 +85,11 @@ class DirectPoll(CollectorBase):
         self.__xchembku = self.__xchembku_client_context.get_interface()
 
         # Get all the jobs ever done.
-        # TODO: Avoid needing to fetch all rockingest records and matching to all disk files.
+        # TODO: Avoid needing to fetch all rockingester records and matching to all disk files.
         models: List[
             CrystalWellModel
         ] = await self.__xchembku.fetch_crystal_wells_filenames(
-            why="rockingest activate getting all crystal wells ever done"
+            why="rockingester activate getting all crystal wells ever done"
         )
 
         # Make an initial list of the data labels associated with any job.

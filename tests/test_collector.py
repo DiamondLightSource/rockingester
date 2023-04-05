@@ -8,10 +8,10 @@ from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientCont
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 
 # Client context creator.
-from rockingest_api.collectors.context import Context as CollectorClientContext
+from rockingester_api.collectors.context import Context as CollectorClientContext
 
 # Server context creator.
-from rockingest_lib.collectors.context import Context as CollectorServerContext
+from rockingester_lib.collectors.context import Context as CollectorServerContext
 
 # Base class for the tester.
 from tests.base import Base
@@ -73,7 +73,7 @@ class CollectorTester(Base):
             xchembku_dataface_specification
         )
 
-        collector_specification = multiconf_dict["rockingest_collector_specification"]
+        collector_specification = multiconf_dict["rockingester_collector_specification"]
         # Make the server context.
         collector_server_context = CollectorServerContext(collector_specification)
 

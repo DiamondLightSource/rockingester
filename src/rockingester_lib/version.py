@@ -5,7 +5,7 @@ import dls_normsql.version
 import dls_servbase_lib.version
 import dls_utilpack.version
 
-import rockingest_lib
+import rockingester_lib
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ def version():
     Current version.
     """
 
-    return rockingest_lib.__version__
+    return rockingester_lib.__version__
 
 
 # ----------------------------------------------------------
@@ -26,7 +26,7 @@ def meta(given_meta=None):
     Adds version information to given meta, if any.
     """
     s = {}
-    s["rockingest_lib"] = version()
+    s["rockingester_lib"] = version()
 
     s.update(dls_servbase_lib.version.meta())
     s.update(dls_utilpack.version.meta())

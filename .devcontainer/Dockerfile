@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 # This file is for use as a devcontainer and a runtime container
 #
@@ -37,7 +37,7 @@ COPY --from=build /venv/ /venv/
 ENV PATH=/venv/bin:$PATH
 
 # change this entrypoint if it is not the same as the repo
-ENTRYPOINT ["rockingest"]
+ENTRYPOINT ["rockingester"]
 CMD ["--version"]
 
-# dae_devops_fingerprint d48f486fef5b0c45c462d9db0268d7f5
+# dae_devops_fingerprint 5107e2dc7615b1579db65b5ac08b3a91

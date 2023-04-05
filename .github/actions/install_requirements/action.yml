@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 name: Install requirements
 description: Run pip install with requirements and upload resulting requirements
@@ -61,4 +61,4 @@ runs:
       shell: bash
 
 
-# dae_devops_fingerprint 391889abb27341309f8de4c103275500
+# dae_devops_fingerprint 99ff347e3797c535b265bf65347f69b1

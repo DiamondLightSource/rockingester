@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 name: Docs CI
 
@@ -56,4 +56,4 @@ jobs:
           publish_dir: .github/pages
           keep_files: true
 
-# dae_devops_fingerprint 2ea4248d909cee0c09bf0bbbcdfb34bf
+# dae_devops_fingerprint 2fc180c8643dbf1692bd9e0819a0335e

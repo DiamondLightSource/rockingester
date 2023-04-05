@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 Naming conventions
 =======================================================================
@@ -31,4 +31,4 @@ repository
     lowercase, hyphens
 
 
-.. # dae_devops_fingerprint f2afbed600b8fd2ef2baa51b603b67a8
+.. # dae_devops_fingerprint 00ace00f0e95078b5c3b87f58d0d3d10

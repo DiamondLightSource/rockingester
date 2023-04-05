@@ -5,10 +5,10 @@ from typing import Any, Dict, Optional, Type
 # Class managing list of things.
 from dls_utilpack.things import Things
 
-from rockingest_lib.collectors.constants import Types
+from rockingester_lib.collectors.constants import Types
 
 # Exceptions.
-from rockingest_lib.exceptions import NotFound
+from rockingester_lib.exceptions import NotFound
 
 logger = logging.getLogger(__name__)
 
@@ -107,12 +107,12 @@ class Collectors(Things):
         # TODO: Use ABC to declare classes as interfaces with abstract methods.
 
         if class_type == Types.AIOHTTP:
-            from rockingest_lib.collectors.aiohttp import Aiohttp
+            from rockingester_lib.collectors.aiohttp import Aiohttp
 
             return Aiohttp
 
         elif class_type == Types.DIRECT_POLL:
-            from rockingest_lib.collectors.direct_poll import DirectPoll
+            from rockingester_lib.collectors.direct_poll import DirectPoll
 
             return DirectPoll
 

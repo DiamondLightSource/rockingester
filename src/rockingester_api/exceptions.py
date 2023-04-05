@@ -29,6 +29,6 @@ class ClientConnectorError(RuntimeError):
 
 class Factory:
     def build(qualname):
-        if qualname == "rockingest_api.exceptions.CapacityReached":
+        if qualname == "rockingester_api.exceptions.CapacityReached":
             return CapacityReached
         return None

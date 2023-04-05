@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 Installing
 =======================================================================
@@ -27,17 +27,17 @@ installation will not interfere with any existing Python software::
 You can now use ``pip`` to install the library and its dependencies::
 
     $ export PIP_FIND_LINKS=/dls_sw/apps/bxflow/artifacts
-    $ python3 -m pip install rockingest
+    $ python3 -m pip install rockingester
 
 If you require a feature that is not currently released you can also install
 from git::
 
-    $ python3 -m pip install git+https://github.com/diamondlightsource/rockingest/rockingest.git
+    $ python3 -m pip install git+https://github.com/diamondlightsource/rockingester/rockingester.git
 
 The library should now be installed and the commandline interface on your path.
 You can check the version that has been installed by typing::
 
-    $ rockingest --version
-    $ rockingest --version-json
+    $ rockingester --version
+    $ rockingester --version-json
 
-.. # dae_devops_fingerprint 3a4e5aa96b2cf6f02a13abe1ab998d31
+.. # dae_devops_fingerprint 9cc5938e9a54e77f0bf42f7859b75140

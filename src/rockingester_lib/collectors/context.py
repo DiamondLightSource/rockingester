@@ -2,15 +2,15 @@ import logging
 from typing import Dict
 
 # Things created in the context.
-from rockingest_lib.collectors.collectors import Collectors, collectors_set_default
+from rockingester_lib.collectors.collectors import Collectors, collectors_set_default
 
 # Base class for an asyncio context.
-from rockingest_lib.contexts.base import Base as ContextBase
+from rockingester_lib.contexts.base import Base as ContextBase
 
 logger = logging.getLogger(__name__)
 
 
-thing_type = "rockingest_lib.collectors.context"
+thing_type = "rockingester_lib.collectors.context"
 
 
 class Context(ContextBase):

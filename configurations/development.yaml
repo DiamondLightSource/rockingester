@@ -15,28 +15,28 @@ logging_settings:
 
 # The external access bits.
 external_access_bits:
-    dataface_port: &ROCKINGEST_PORT 27821
+    dataface_port: &ROCKINGESTER_PORT 27821
 
-# The rockingest direct access.
-rockingest_collector_specification_direct_poll:
-    &ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
-    type: "rockingest_lib.collectors.direct_poll"
+# The rockingester direct access.
+rockingester_collector_specification_direct_poll:
+    &ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
+    type: "rockingester_lib.collectors.direct_poll"
     type_specific_tbd:
         directories:
             - "${output_directory}/images"
         recursive: True
 
-# The rockingest client/server composite.
-rockingest_collector_specification:
-    type: "rockingest_lib.collectors.aiohttp"
+# The rockingester client/server composite.
+rockingester_collector_specification:
+    type: "rockingester_lib.collectors.aiohttp"
     type_specific_tbd:
-        # The remote rockingest server access.
+        # The remote rockingester server access.
         aiohttp_specification:
             server_host: "*"
             client_host: "127.0.0.1"
-            port: *ROCKINGEST_PORT
-        # The local implementation of the rockingest.
-        direct_collector_specification: *ROCKINGEST_COLLECTOR_SPECIFICATION_DIRECT_POLL
+            port: *ROCKINGESTER_PORT
+        # The local implementation of the rockingester.
+        direct_collector_specification: *ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
     context:
         start_as: process
 

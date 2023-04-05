@@ -8,7 +8,7 @@ import pytest
 from dls_logformatter.dls_logformatter import DlsLogformatter
 
 # Version of the package.
-# from rockingest_lib.version import meta as version_meta
+# from rockingester_lib.version import meta as version_meta
 
 logger = logging.getLogger(__name__)
 
@@ -39,10 +39,10 @@ def logging_setup():
     logging.getLogger("asyncio").setLevel("WARNING")
     logging.getLogger("PIL").setLevel("INFO")
 
-    logging.getLogger("rockingest_lib.things").setLevel("INFO")
+    logging.getLogger("rockingester_lib.things").setLevel("INFO")
 
     # Messages about starting and stopping services.
-    logging.getLogger("rockingest_lib.base_aiohttp").setLevel("INFO")
+    logging.getLogger("rockingester_lib.base_aiohttp").setLevel("INFO")
 
     yield None
 

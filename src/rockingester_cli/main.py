@@ -8,11 +8,11 @@ import multiprocessing
 from dls_mainiac_lib.mainiac import Mainiac
 
 # The subcommands.
-from rockingest_cli.subcommands.service import Service
+from rockingester_cli.subcommands.service import Service
 
 # The package version.
-from rockingest_cli.version import meta as version_meta
-from rockingest_cli.version import version
+from rockingester_cli.version import meta as version_meta
+from rockingester_cli.version import version
 
 logger = logging.getLogger(__name__)
 
@@ -167,7 +167,7 @@ class _asyncio_logging_filter:
 def main():
 
     # Instantiate the app.
-    main = Main("rockingest_cli")
+    main = Main("rockingester_cli")
 
     # Configure the app from command line arguments.
     main.parse_args_and_configure_logging()

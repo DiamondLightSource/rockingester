@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 Devops
 =======================================================================
@@ -43,4 +43,4 @@ Publishing::
     
 
 
-.. # dae_devops_fingerprint d171b270eb37566e5f4593fbf7bca718
+.. # dae_devops_fingerprint 928d48075be9b807bc31e4ba7e2ff8e9

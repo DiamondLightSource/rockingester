@@ -8,9 +8,9 @@ xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
         filename: "${output_directory}/xchembku.sqlite"
         log_level: "WARNING"
 
-# The rockingest direct access.
-rockingest_collector_specification:
-    type: "rockingest_lib.collectors.direct_poll"
+# The rockingester direct access.
+rockingester_collector_specification:
+    type: "rockingester_lib.collectors.direct_poll"
     type_specific_tbd:
         directories:
             - "${output_directory}/images"

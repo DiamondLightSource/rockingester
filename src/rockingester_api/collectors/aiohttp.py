@@ -1,10 +1,10 @@
 import logging
 
 # Class for an aiohttp client.
-from rockingest_api.aiohttp_client import AiohttpClient
+from rockingester_api.aiohttp_client import AiohttpClient
 
 # Dataface protocolj things.
-from rockingest_api.collectors.constants import Commands, Keywords
+from rockingester_api.collectors.constants import Commands, Keywords
 
 logger = logging.getLogger(__name__)
 
@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------------------
 class Aiohttp:
     """
-    Object implementing client side API for talking to the rockingest_collector server.
+    Object implementing client side API for talking to the rockingester_collector server.
     Please see doctopic [A01].
     """
 

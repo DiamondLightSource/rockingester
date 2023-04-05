@@ -52,7 +52,7 @@ class Base:
     # ----------------------------------------------------------------------------------------
     def get_multiconf(self):
 
-        rockingest_multiconf = Multiconfs().build_object(
+        rockingester_multiconf = Multiconfs().build_object(
             {
                 "type": MulticonfThingTypes.YAML,
                 "type_specific_tbd": {"filename": self.__configuration_file},
@@ -60,10 +60,10 @@ class Base:
         )
 
         # For convenience, always do these replacement.
-        rockingest_multiconf.substitute({"output_directory": self.__output_directory})
+        rockingester_multiconf.substitute({"output_directory": self.__output_directory})
 
         # Add various things from the environment into the multiconf.
-        rockingest_multiconf.substitute(
+        rockingester_multiconf.substitute(
             {
                 "CWD": os.getcwd(),
                 "PYTHONPATH": os.environ.get("PYTHONPATH", "PYTHONPATH"),
@@ -71,6 +71,6 @@ class Base:
         )
 
         # Set the global value of our multiconf which might be used in other modules.
-        multiconfs_set_default(rockingest_multiconf)
+        multiconfs_set_default(rockingester_multiconf)
 
-        return rockingest_multiconf
+        return rockingester_multiconf

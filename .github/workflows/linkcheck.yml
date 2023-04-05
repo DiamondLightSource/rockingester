@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 name: Link Check
 
@@ -27,4 +27,4 @@ jobs:
       - name: Check links
         run: tox -e docs build -- -b linkcheck
 
-# dae_devops_fingerprint a2d0b4d0a0f67bcf2aec45d3f9961d2c
+# dae_devops_fingerprint 32e896d52977d637229f185f9f6bd25f

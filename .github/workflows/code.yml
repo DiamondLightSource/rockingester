@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 name: Code CI
 
@@ -116,7 +116,7 @@ jobs:
 
       - name: Test module --version works using the installed wheel
         # If more than one module in src/ replace with module name to test
-        run: rockingest --version-json
+        run: rockingester --version-json
 
   container:
     needs: [lint, dist, test]
@@ -212,4 +212,4 @@ jobs:
         with:
           password: ${{ secrets.PYPI_TOKEN }}
 
-# dae_devops_fingerprint 260856c07024120992518fc08c45a45e
+# dae_devops_fingerprint 7eb4f406a3bb52db3bb72e10d546a524

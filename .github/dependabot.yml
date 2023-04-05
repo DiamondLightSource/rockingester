@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 # To get started with Dependabot version updates, you'll need to specify which
 # package ecosystems to update and where the package manifests are located.
@@ -19,4 +19,4 @@ updates:
     schedule:
       interval: "weekly"
 
-# dae_devops_fingerprint a7b7174abf9d0d6eb0eaaa164a686ef7
+# dae_devops_fingerprint f5a7322640608fd00e582daea5f9b272

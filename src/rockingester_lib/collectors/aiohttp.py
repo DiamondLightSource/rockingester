@@ -10,17 +10,17 @@ from dls_utilpack.require import require
 from dls_utilpack.thing import Thing
 
 # Base class for an aiohttp server.
-from rockingest_lib.base_aiohttp import BaseAiohttp
+from rockingester_lib.base_aiohttp import BaseAiohttp
 
 # Factory to make a Collector.
-from rockingest_lib.collectors.collectors import Collectors
+from rockingester_lib.collectors.collectors import Collectors
 
 # Collector protocolj things.
-from rockingest_lib.collectors.constants import Commands, Keywords
+from rockingester_lib.collectors.constants import Commands, Keywords
 
 logger = logging.getLogger(__name__)
 
-thing_type = "rockingest_lib.collectors.aiohttp"
+thing_type = "rockingester_lib.collectors.aiohttp"
 
 
 # ------------------------------------------------------------------------------------------

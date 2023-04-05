@@ -1,6 +1,6 @@
 .. # ********** Please don't edit this file!
 .. # ********** It has been generated automatically by dae_devops version 0.5.2.
-.. # ********** For repository_name rockingest
+.. # ********** For repository_name rockingester
 
 Contributing to the project
 ===========================
@@ -11,7 +11,7 @@ filing a new one. If you have a great idea but it involves big changes, please
 file a ticket before making a pull request! We want to make sure you don't spend
 your time coding something that might not fit the scope of the project.
 
-.. _GitHub: https://github.com/DiamondLightSource/rockingest/issues
+.. _GitHub: https://github.com/DiamondLightSource/rockingester/issues
 
 Issue or Discussion?
 --------------------
@@ -20,7 +20,7 @@ Github also offers discussions_ as a place to ask questions and share ideas. If
 your issue is open ended and it is not obvious when it can be "closed", please
 raise it as a discussion instead.
 
-.. _discussions: https://github.com/DiamondLightSource/rockingest/discussions
+.. _discussions: https://github.com/DiamondLightSource/rockingester/discussions
 
 Code coverage
 -------------
@@ -36,6 +36,6 @@ The `Developer Guide`_ contains information on setting up a development
 environment, running the tests and what standards the code and documentation
 should follow.
 
-.. _Developer Guide: https://diamondlightsource.github.io/rockingest/main/developer/how-to/contribute.html
+.. _Developer Guide: https://diamondlightsource.github.io/rockingester/main/developer/how-to/contribute.html
 
-.. # dae_devops_fingerprint 811e3d0f44f7aea56df9cebe6f13ce75
+.. # dae_devops_fingerprint 6af4c15a85db612138b071dbd11dde21
