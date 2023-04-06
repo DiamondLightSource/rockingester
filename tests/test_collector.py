@@ -6,6 +6,7 @@ import time
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
+from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 
 # Client context creator.
 from rockingester_api.collectors.context import Context as CollectorClientContext
@@ -106,18 +107,42 @@ class CollectorTester(Base):
         # Reference the xchembku object which the context has set up as the default.
         xchembku = xchembku_datafaces_get_default()
 
-        # Make the scrapable directory.
-        images_directory = f"{output_directory}/images"
-        os.makedirs(images_directory)
+        # Make the plate on which the wells reside.
+        visit = "cm00001-1"
+        crystal_plate_model = CrystalPlateModel(
+            formulatrix__plate__id=10,
+            barcode="98ab",
+            visit=visit,
+        )
+
+        await xchembku.originate_crystal_plates([crystal_plate_model])
 
         # Get list of images before we create any of the scrape-able files.
         records = await xchembku.fetch_crystal_wells_filenames()
 
         assert len(records) == 0, "images before any scraping"
 
+        # Make the scrapable directory.
+        images_directory = (
+            f"{output_directory}/SubwellImages/98ab_2023-04-06_RI1000-0276-3drop"
+        )
+        os.makedirs(images_directory)
+
         # Create a few scrape-able files.
         for i in range(10, 10 + image_count):
-            filename = f"{images_directory}/%06d.jpg" % (i)
+            filename = f"{images_directory}/98ab_%02dA_1.jpg" % (i)
+            with open(filename, "w") as stream:
+                stream.write("")
+
+        # Make another scrapable directory with a different barcode.
+        images_directory = (
+            f"{output_directory}/SubwellImages/98ac_2023-04-06_RI1000-0276-3drop"
+        )
+        os.makedirs(images_directory)
+
+        # Create a few more scrape-able files on a plate with a different barcode.
+        for i in range(10, 10 + image_count):
+            filename = f"{images_directory}/98ac_%02dA_1.jpg" % (i)
             with open(filename, "w") as stream:
                 stream.write("")
 

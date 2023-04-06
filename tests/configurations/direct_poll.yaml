@@ -13,6 +13,6 @@ rockingester_collector_specification:
     type: "rockingester_lib.collectors.direct_poll"
     type_specific_tbd:
         directories:
-            - "${output_directory}/images"
+            - "${output_directory}/SubwellImages"
         recursive: True
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION

@@ -3,7 +3,7 @@ import glob
 import logging
 import os
 import time
-from typing import List
+from typing import Dict, List
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
@@ -12,6 +12,10 @@ from PIL import Image
 
 # Dataface client context.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
+from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
+
+# Crystal plate pydantic model.
+from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 
 # Crystal well pydantic model.
 from xchembku_api.models.crystal_well_model import CrystalWellModel
@@ -52,6 +56,10 @@ class DirectPoll(CollectorBase):
         # This flag will stop the ticking async task.
         self.__keep_ticking = True
         self.__tick_future = None
+
+        self.__latest_formulatrix__plate__id = 0
+
+        self.__crystal_plate_models_by_barcode: Dict[CrystalPlateModel] = {}
 
         self.__known_filenames = []
 
@@ -140,12 +148,35 @@ class DirectPoll(CollectorBase):
 
         while self.__keep_ticking:
             try:
+                # Fetch all the plates we don't have yet.
+                await self.fetch_plates_by_barcode()
+
+                # Scrape all the configured plates directories.
                 await self.scrape()
             except Exception as exception:
                 logger.error(explain2(exception, "scraping"), exc_info=exception)
 
             # TODO: Make periodic tick period to be configurable.
             await asyncio.sleep(1.0)
+
+    # ----------------------------------------------------------------------------------------
+    async def fetch_plates_by_barcode(self) -> None:
+        """
+        Fetch all barcodes in the database.
+        """
+
+        # Fetch all the plates we don't have yet.
+        plate_models = await self.__xchembku.fetch_crystal_plates(
+            CrystalPlateFilterModel(
+                from_formulatrix__plate__id=self.__latest_formulatrix__plate__id
+            )
+        )
+
+        # Add the plates to the list.
+        for plate_model in plate_models:
+            barcode = plate_model.barcode
+            self.__crystal_plate_models_by_barcode[barcode] = plate_model
+            self.__latest_formulatrix__plate__id = plate_model.formulatrix__plate__id
 
     # ----------------------------------------------------------------------------------------
     async def scrape(self) -> None:
@@ -155,16 +186,50 @@ class DirectPoll(CollectorBase):
 
         collection: List[CrystalWellModel] = []
 
-        # TODO: Use asyncio tasks to parellize scraping directories.
+        # TODO: Use asyncio tasks to parellize scraping plates directories.
         for directory in self.__directories:
-            await self.scrape_directory(directory, collection)
+            await self.scrape_plates_directory(directory, collection)
 
         # Flush any remaining collection to the database.
         await self.flush_collection(collection)
 
     # ----------------------------------------------------------------------------------------
-    async def scrape_directory(
+    async def scrape_plates_directory(
         self,
+        plates_directory: str,
+        collection: List[CrystalWellModel],
+    ) -> None:
+        """
+        Scrape a single directory looking for directories which correspond to plates.
+        """
+
+        plate_directories = [
+            entry.name for entry in os.scandir(plates_directory) if entry.is_dir()
+        ]
+
+        logger.info(
+            f"[SCRDIR] found {len(plate_directories)} plate directories in {plates_directory}"
+        )
+
+        for plate_directory in plate_directories:
+            # Get the plate's barcode from the directory name.
+            plate_barcode = plate_directory[0:4]
+
+            # Skip the plate if the database doesn't have its barcode.
+            crystal_plate_model = self.__crystal_plate_models_by_barcode.get(
+                plate_barcode
+            )
+            if crystal_plate_model is not None:
+                await self.scrape_plate_directory(
+                    crystal_plate_model,
+                    f"{plates_directory}/{plate_directory}",
+                    collection,
+                )
+
+    # ----------------------------------------------------------------------------------------
+    async def scrape_plate_directory(
+        self,
+        crystal_plate_model: CrystalPlateModel,
         directory: str,
         collection: List[CrystalWellModel],
     ) -> None:
@@ -179,31 +244,22 @@ class DirectPoll(CollectorBase):
         if not os.path.isdir(directory):
             return
 
-        t0 = time.time()
-        filenames = glob.glob(f"{directory}/**", recursive=self.__recursive)
-        t1 = time.time()
+        # Get all the well images in the plate directory.
+        names = [entry.name for entry in os.scandir(directory) if entry.is_file()]
 
         new_count = 0
-        for filename in filenames:
-            if os.path.isdir(filename):
-                continue
-
+        for name in names:
+            filename = f"{directory}/{name}"
             if filename not in self.__known_filenames:
-                # Add image to list of collection.
-                await self.add_discovery(filename, collection)
+                # Add image to ollection.
+                await self.add_discovery(crystal_plate_model, filename, collection)
                 self.__known_filenames.append(filename)
                 new_count = new_count + 1
-
-        if new_count >= 0:
-            seconds = "%0.3f" % (t1 - t0)
-            logger.info(
-                f"from {directory} found {new_count} newly actionable files"
-                f" among {len(filenames)} total files in {seconds} seconds"
-            )
 
     # ----------------------------------------------------------------------------------------
     async def add_discovery(
         self,
+        crystal_plate_model: CrystalPlateModel,
         filename: str,
         collection: List[CrystalWellModel],
     ) -> None:
@@ -227,6 +283,7 @@ class DirectPoll(CollectorBase):
         collection.append(
             CrystalWellModel(
                 filename=filename,
+                crystal_plate_uuid=crystal_plate_model.uuid,
                 error=error,
                 width=width,
                 height=height,
