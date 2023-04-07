@@ -8,14 +8,17 @@ xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
         filename: "${output_directory}/xchembku.sqlite"
         log_level: "WARNING"
 
+ingested_directory: &INGESTED_DIRECTORY "${output_directory}/SubwellImages_ingested"
+nobarcode_directory: &NOBARCODE_DIRECTORY "${output_directory}/SubwellImages_nobarcode"
+
 # The rockingester direct access.
 rockingester_collector_specification:
     type: "rockingester_lib.collectors.direct_poll"
     type_specific_tbd:
         plates_directories:
             - "${output_directory}/SubwellImages"
-        ingested_directory: "${output_directory}/SubwellImages_ingested"
-        nobarcode_directory: "${output_directory}/SubwellImages_nobarcode"
+        ingested_directory: *INGESTED_DIRECTORY
+        nobarcode_directory: *NOBARCODE_DIRECTORY
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
         ingest_only_barcodes:
             - 98ab

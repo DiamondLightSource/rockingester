@@ -57,7 +57,19 @@ class CollectorTester(Base):
 
     # ----------------------------------------------------------------------------------------
     async def _main_coroutine(self, constants, output_directory):
-        """ """
+        """
+        This tests the collector behavior.
+
+        First it starts the xchembku and collector and loads a single plate barcode into the database.
+
+        Then, while the collector thread is running, it creates some scrapable images.
+
+        The test then waits a while for the scraping to be done, and verifies the outputs.
+
+        These are in 3 barcodes.  The first matches the barcode in the database, so it gets scraped.
+        The second matches no barcode in the database, so it is moved to the nobarcode area and not added to the database.
+        The third barcode is not scraped because it is not configured in the ingest_only_barcodes list.
+        """
 
         # Get the multiconf from the testing configuration yaml.
         multiconf = self.get_multiconf()
@@ -83,7 +95,8 @@ class CollectorTester(Base):
         collector_client_context = CollectorClientContext(collector_specification)
 
         # Remember the collector specification so we can assert some things later.
-        self.__collector_specification = collector_specification
+        self.__ingested_directory = Path(multiconf_dict["ingested_directory"])
+        self.__nobarcode_directory = Path(multiconf_dict["nobarcode_directory"])
 
         image_count = 2
 
@@ -130,7 +143,7 @@ class CollectorTester(Base):
 
         # Make the scrapable directory with some files.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
-        plate_directory1.mkdir()
+        plate_directory1.mkdir(parents=True)
         for i in range(10, 10 + image_count):
             filename = plate_directory1 / ("98ab_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
@@ -138,7 +151,7 @@ class CollectorTester(Base):
 
         # Make another scrapable directory with a different barcode.
         plate_directory2 = plates_directory / "98ac_2023-04-06_RI1000-0276-3drop"
-        plate_directory2.mkdir()
+        plate_directory2.mkdir(parents=True)
         for i in range(10, 10 + image_count + 1):
             filename = plate_directory2 / ("98ac_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
@@ -146,7 +159,7 @@ class CollectorTester(Base):
 
         # Make yet another scrapable directory with a different barcode.
         plate_directory3 = plates_directory / "98ad_2023-04-06_RI1000-0276-3drop"
-        plate_directory3.mkdir()
+        plate_directory3.mkdir(parents=True)
         for i in range(10, 10 + image_count + 2):
             filename = plate_directory3 / ("98ad_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
@@ -190,36 +203,28 @@ class CollectorTester(Base):
         assert count == image_count + 2, "third plate_directory"
 
         # We should have ingested the first barcode.
-        ingested_directory = (
-            Path(
-                self.__collector_specification["type_specific_tbd"][
-                    "ingested_directory"
-                ]
-            )
-            / plate_directory1.name
+        count = sum(1 for _ in self.__ingested_directory.glob("*") if _.is_dir())
+        assert count == 1, f"ingested_directory {str(self.__ingested_directory)}"
+        count = sum(
+            1
+            for _ in (self.__ingested_directory / plate_directory1.name).glob("*")
+            if _.is_file()
         )
-        count = sum(1 for _ in ingested_directory.glob("*") if _.is_dir())
-        assert count == 1, f"ingested_directory {str(ingested_directory)}"
-        count = sum(1 for _ in ingested_directory.glob("*") if _.is_file())
         assert (
             count == image_count
-        ), f"ingested_directory images {str(ingested_directory)}"
+        ), f"ingested_directory images {str(self.__ingested_directory)}"
 
         # We should have send the second barcode to the nobarcode area.
-        nobarcode_directory = (
-            Path(
-                self.__collector_specification["type_specific_tbd"][
-                    "nobarcode_directory"
-                ]
-            )
-            / plate_directory2.name
+        count = sum(1 for _ in self.__nobarcode_directory.glob("*") if _.is_dir())
+        assert count == 1, f"nobarcode_directory {str(self.__nobarcode_directory)}"
+        count = sum(
+            1
+            for _ in (self.__nobarcode_directory / plate_directory2.name).glob("*")
+            if _.is_file()
         )
-        count = sum(1 for _ in nobarcode_directory.glob("*") if _.is_dir())
-        assert count == 1, f"nobarcode_directory {str(nobarcode_directory)}"
-        count = sum(1 for _ in nobarcode_directory.glob("*") if _.is_file())
         assert (
             count == image_count + 1
-        ), f"nobarcode_directory images {str(nobarcode_directory)}"
+        ), f"nobarcode_directory images {str(self.__nobarcode_directory)}"
 
     # ----------------------------------------------------------------------------------------
 
