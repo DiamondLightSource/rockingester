@@ -35,6 +35,9 @@ rockingester_collector_specification_direct_poll:
         ingested_directory: "${output_directory}/SubwellImages_ingested"
         nobarcode_directory: "${output_directory}/SubwellImages_nobarcode"
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
+        ingest_only_barcodes:
+            - 98ab
+            - 98ac
 
 # The rockingester client/server composite.
 rockingester_collector_specification:

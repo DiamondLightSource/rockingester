@@ -124,15 +124,13 @@ class CollectorTester(Base):
         # Get list of images before we create any of the scrape-able files.
         records = await xchembku.fetch_crystal_wells_filenames()
 
-        assert len(records) == 0, "images before any scraping"
+        assert len(records) == 0, "images before any new files are put in scrapable"
 
         plates_directory = Path(output_directory) / "SubwellImages"
 
-        # Make the scrapable directory.
+        # Make the scrapable directory with some files.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
-        os.makedirs(plate_directory1)
-
-        # Create a few scrape-able files.
+        plate_directory1.mkdir()
         for i in range(10, 10 + image_count):
             filename = plate_directory1 / ("98ab_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
@@ -140,11 +138,17 @@ class CollectorTester(Base):
 
         # Make another scrapable directory with a different barcode.
         plate_directory2 = plates_directory / "98ac_2023-04-06_RI1000-0276-3drop"
-        os.makedirs(plate_directory2)
-
-        # Create a few more scrape-able files on a plate with a different barcode.
+        plate_directory2.mkdir()
         for i in range(10, 10 + image_count + 1):
             filename = plate_directory2 / ("98ac_%02dA_1.jpg" % (i))
+            with open(filename, "w") as stream:
+                stream.write("")
+
+        # Make yet another scrapable directory with a different barcode.
+        plate_directory3 = plates_directory / "98ad_2023-04-06_RI1000-0276-3drop"
+        plate_directory3.mkdir()
+        for i in range(10, 10 + image_count + 2):
+            filename = plate_directory3 / ("98ad_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -181,6 +185,10 @@ class CollectorTester(Base):
         count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
         assert count == 0, "second plate_directory"
 
+        # The third plate directory is left intact.
+        count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
+        assert count == image_count + 2, "third plate_directory"
+
         # We should have ingested the first barcode.
         ingested_directory = (
             Path(
@@ -190,8 +198,12 @@ class CollectorTester(Base):
             )
             / plate_directory1.name
         )
+        count = sum(1 for _ in ingested_directory.glob("*") if _.is_dir())
+        assert count == 1, f"ingested_directory {str(ingested_directory)}"
         count = sum(1 for _ in ingested_directory.glob("*") if _.is_file())
-        assert count == image_count, f"ingested_directory {str(ingested_directory)}"
+        assert (
+            count == image_count
+        ), f"ingested_directory images {str(ingested_directory)}"
 
         # We should have send the second barcode to the nobarcode area.
         nobarcode_directory = (
@@ -202,10 +214,12 @@ class CollectorTester(Base):
             )
             / plate_directory2.name
         )
+        count = sum(1 for _ in nobarcode_directory.glob("*") if _.is_dir())
+        assert count == 1, f"nobarcode_directory {str(nobarcode_directory)}"
         count = sum(1 for _ in nobarcode_directory.glob("*") if _.is_file())
         assert (
             count == image_count + 1
-        ), f"nobarcode_directory {str(nobarcode_directory)}"
+        ), f"nobarcode_directory images {str(nobarcode_directory)}"
 
     # ----------------------------------------------------------------------------------------
 

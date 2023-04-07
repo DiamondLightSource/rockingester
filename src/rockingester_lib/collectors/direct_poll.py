@@ -53,6 +53,8 @@ class DirectPoll(CollectorBase):
             require(s, type_specific_tbd, "nobarcode_directory")
         )
 
+        self.__ingest_only_barcodes = type_specific_tbd.get("ingest_only_barcodes")
+
         # Database where we will get plate barcodes and add new wells.
         self.__xchembku_client_context = None
         self.__xchembku = None
@@ -209,6 +211,11 @@ class DirectPoll(CollectorBase):
         for plate_name in plate_names:
             # Get the plate's barcode from the directory name.
             plate_barcode = plate_name[0:4]
+
+            # We have a specific list we want to process?
+            if self.__ingest_only_barcodes is not None:
+                if plate_barcode not in self.__ingest_only_barcodes:
+                    continue
 
             # Get the matching plate record from the database.
             crystal_plate_model = self.__crystal_plate_models_by_barcode.get(

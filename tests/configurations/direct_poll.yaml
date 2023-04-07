@@ -17,3 +17,6 @@ rockingester_collector_specification:
         ingested_directory: "${output_directory}/SubwellImages_ingested"
         nobarcode_directory: "${output_directory}/SubwellImages_nobarcode"
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
+        ingest_only_barcodes:
+            - 98ab
+            - 98ac
