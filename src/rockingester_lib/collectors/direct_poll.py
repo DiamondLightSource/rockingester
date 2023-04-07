@@ -1,8 +1,8 @@
 import asyncio
-import glob
 import logging
 import os
-import time
+import shutil
+from pathlib import Path
 from typing import Dict, List
 
 from dls_utilpack.callsign import callsign
@@ -45,11 +45,15 @@ class DirectPoll(CollectorBase):
         s = f"{callsign(self)} specification", self.specification()
 
         type_specific_tbd = require(s, self.specification(), "type_specific_tbd")
-        self.__directories = require(s, type_specific_tbd, "directories")
-        self.__recursive = require(s, type_specific_tbd, "recursive")
+        self.__plates_directories = require(s, type_specific_tbd, "plates_directories")
+        self.__ingested_directory = Path(
+            require(s, type_specific_tbd, "ingested_directory")
+        )
+        self.__nobarcode_directory = Path(
+            require(s, type_specific_tbd, "nobarcode_directory")
+        )
 
-        # We will use the dataface to discover previously processed files.
-        # We will also discovery newly find files into this database.
+        # Database where we will get plate barcodes and add new wells.
         self.__xchembku_client_context = None
         self.__xchembku = None
 
@@ -59,19 +63,28 @@ class DirectPoll(CollectorBase):
 
         self.__latest_formulatrix__plate__id = 0
 
+        # This is the list of plates indexed by their barcode.
         self.__crystal_plate_models_by_barcode: Dict[CrystalPlateModel] = {}
-
-        self.__known_filenames = []
 
     # ----------------------------------------------------------------------------------------
     async def activate(self) -> None:
         """
         Activate the object.
 
-        This implementation gets the list of filenames already known to the xchembku.
-
         Then it starts the coro task to awaken every few seconds to scrape the directories.
         """
+
+        # Make sure the nobarcode_directory is created.
+        try:
+            self.__nobarcode_directory.mkdir(parents=True)
+        except FileExistsError:
+            pass
+
+        # Make sure the ingested_directory is created.
+        try:
+            self.__ingested_directory.mkdir(parents=True)
+        except FileExistsError:
+            pass
 
         # Make the xchembku client context.
         s = require(
@@ -91,22 +104,6 @@ class DirectPoll(CollectorBase):
 
         # Get a reference to the xchembku interface provided by the context.
         self.__xchembku = self.__xchembku_client_context.get_interface()
-
-        # Get all the jobs ever done.
-        # TODO: Avoid needing to fetch all rockingester records and matching to all disk files.
-        models: List[
-            CrystalWellModel
-        ] = await self.__xchembku.fetch_crystal_wells_filenames(
-            why="rockingester activate getting all crystal wells ever done"
-        )
-
-        # Make an initial list of the data labels associated with any job.
-        self.__known_filenames = []
-        for model in models:
-            if model.filename not in self.__known_filenames:
-                self.__known_filenames.append(model.filename)
-
-        logger.debug(f"activating with {len(models)} known filenames")
 
         # Poll periodically.
         self.__tick_future = asyncio.get_event_loop().create_task(self.tick())
@@ -162,7 +159,7 @@ class DirectPoll(CollectorBase):
     # ----------------------------------------------------------------------------------------
     async def fetch_plates_by_barcode(self) -> None:
         """
-        Fetch all barcodes in the database.
+        Fetch all barcodes in the database which we don't have in memory yet.
         """
 
         # Fetch all the plates we don't have yet.
@@ -172,10 +169,11 @@ class DirectPoll(CollectorBase):
             )
         )
 
-        # Add the plates to the list.
+        # Add the plates to the list, assumed sorted by formulatrix__plate__id.
         for plate_model in plate_models:
-            barcode = plate_model.barcode
-            self.__crystal_plate_models_by_barcode[barcode] = plate_model
+            self.__crystal_plate_models_by_barcode[plate_model.barcode] = plate_model
+
+            # Remember the highest one we got to shorten the query for next time.
             self.__latest_formulatrix__plate__id = plate_model.formulatrix__plate__id
 
     # ----------------------------------------------------------------------------------------
@@ -184,127 +182,166 @@ class DirectPoll(CollectorBase):
         Scrape all the configured directories looking for new files.
         """
 
-        collection: List[CrystalWellModel] = []
-
         # TODO: Use asyncio tasks to parellize scraping plates directories.
-        for directory in self.__directories:
-            await self.scrape_plates_directory(directory, collection)
-
-        # Flush any remaining collection to the database.
-        await self.flush_collection(collection)
+        for directory in self.__plates_directories:
+            await self.scrape_plates_directory(Path(directory))
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plates_directory(
         self,
-        plates_directory: str,
-        collection: List[CrystalWellModel],
+        plates_directory: Path,
     ) -> None:
         """
-        Scrape a single directory looking for directories which correspond to plates.
+        Scrape a single directory looking for subdirectories which correspond to plates.
         """
 
-        plate_directories = [
+        if not plates_directory.is_dir():
+            return
+
+        plate_names = [
             entry.name for entry in os.scandir(plates_directory) if entry.is_dir()
         ]
 
         logger.info(
-            f"[SCRDIR] found {len(plate_directories)} plate directories in {plates_directory}"
+            f"[SCRDIR] found {len(plate_names)} plate directories in {plates_directory}"
         )
 
-        for plate_directory in plate_directories:
+        for plate_name in plate_names:
             # Get the plate's barcode from the directory name.
-            plate_barcode = plate_directory[0:4]
+            plate_barcode = plate_name[0:4]
 
-            # Skip the plate if the database doesn't have its barcode.
+            # Get the matching plate record from the database.
             crystal_plate_model = self.__crystal_plate_models_by_barcode.get(
                 plate_barcode
             )
+
+            # This plate is in the database?
             if crystal_plate_model is not None:
                 await self.scrape_plate_directory(
+                    plates_directory / plate_name,
                     crystal_plate_model,
-                    f"{plates_directory}/{plate_directory}",
-                    collection,
                 )
+            # Not in the database?
+            else:
+                await self.move_to_nobarcode(plates_directory / plate_name)
+
+    # ----------------------------------------------------------------------------------------
+    async def move_to_nobarcode(
+        self,
+        plate_directory: Path,
+    ) -> None:
+        """
+        Move a plate directory's well images to the "nobarcode" area.
+
+        Then remove the plate directory.
+        """
+
+        target = self.__nobarcode_directory / plate_directory.name
+        try:
+            target.mkdir(parents=True)
+        except FileExistsError:
+            pass
+
+        # Get all the well images in the plate directory.
+        well_names = [
+            entry.name for entry in os.scandir(plate_directory) if entry.is_file()
+        ]
+
+        for well_name in well_names:
+            # Move to nobarcode, replacing what might already be there.
+            # TODO: Protect against moving an image file which is currently being written by Luigi.
+            shutil.move(
+                plate_directory / well_name,
+                target / well_name,
+            )
+
+        # Remove the source directory, which should now be empty.
+        # TODO: Protect against removing an plate directory which is currently being written by Luigi.
+        try:
+            plate_directory.rmdir()
+        except OSError:
+            pass
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plate_directory(
         self,
+        plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
-        directory: str,
-        collection: List[CrystalWellModel],
     ) -> None:
         """
         Scrape a single directory looking for new files.
 
         Adds discovered files to internal list which gets pushed when it reaches a configurable size.
-
-        Also add discovered files to internal list of known files to avoid duplicate pushing.
         """
-
-        if not os.path.isdir(directory):
-            return
 
         # Get all the well images in the plate directory.
-        names = [entry.name for entry in os.scandir(directory) if entry.is_file()]
+        well_names = [
+            entry.name for entry in os.scandir(plate_directory) if entry.is_file()
+        ]
 
-        new_count = 0
-        for name in names:
-            filename = f"{directory}/{name}"
-            if filename not in self.__known_filenames:
-                # Add image to ollection.
-                await self.add_discovery(crystal_plate_model, filename, collection)
-                self.__known_filenames.append(filename)
-                new_count = new_count + 1
+        for well_name in well_names:
+            # Process well's image file.
+            await self.ingest_well(
+                plate_directory,
+                well_name,
+                crystal_plate_model,
+            )
+
+        # Remove the source directory, which should now be empty.
+        # TODO: Protect against removing an plate directory which is currently being written by Luigi.
+        try:
+            plate_directory.rmdir()
+        except OSError:
+            pass
 
     # ----------------------------------------------------------------------------------------
-    async def add_discovery(
+    async def ingest_well(
         self,
+        plate_directory: Path,
+        well_name: str,
         crystal_plate_model: CrystalPlateModel,
-        filename: str,
-        collection: List[CrystalWellModel],
     ) -> None:
         """
-        Add new discovery for later flush.
+        Ingest the well into the database.
+
+        Move the well image file to the ingested area.
+
+        TODO: Protect against ingesting an image file which is currently being written by Luigi.
         """
 
-        if len(collection) >= 1000:
-            await self.flush_collection(collection)
-
+        well_filename = plate_directory / well_name
         error = None
         try:
-            image = Image.open(filename)
+            image = Image.open(well_filename)
             width, height = image.size
         except Exception as exception:
             error = str(exception)
             width = None
             height = None
 
-        # Add a new discovery to the collection.
-        collection.append(
-            CrystalWellModel(
-                filename=filename,
-                crystal_plate_uuid=crystal_plate_model.uuid,
-                error=error,
-                width=width,
-                height=height,
-            )
+        crystal_well_model = CrystalWellModel(
+            filename=str(well_filename),
+            crystal_plate_uuid=crystal_plate_model.uuid,
+            error=error,
+            width=width,
+            height=height,
         )
 
-    # ----------------------------------------------------------------------------------------
-    async def flush_collection(self, collection: List[CrystalWellModel]) -> None:
-        """
-        Send the discovered files to xchembku for storage.
-        """
-
-        if len(collection) == 0:
-            return
-
-        logger.debug(f"flushing {len(collection)} from collection")
-
         # Here we originate the crystal well records into xchembku.
-        await self.__xchembku.originate_crystal_wells(collection)
+        # TODO: Handle case where the same crystal well filename has already been originated.
+        await self.__xchembku.originate_crystal_wells([crystal_well_model])
 
-        collection.clear()
+        target = self.__ingested_directory / plate_directory.name
+        try:
+            target.mkdir(parents=True)
+        except FileExistsError:
+            pass
+
+        # Move to ingested, replacing what might already be there.
+        shutil.move(
+            well_filename,
+            target / well_name,
+        )
 
     # ----------------------------------------------------------------------------------------
     async def close_client_session(self):

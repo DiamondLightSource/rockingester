@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import time
+from pathlib import Path
 
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
@@ -81,6 +82,9 @@ class CollectorTester(Base):
         # Make the client context.
         collector_client_context = CollectorClientContext(collector_specification)
 
+        # Remember the collector specification so we can assert some things later.
+        self.__collector_specification = collector_specification
+
         image_count = 2
 
         # Start the client context for the direct access to the xchembku.
@@ -122,27 +126,25 @@ class CollectorTester(Base):
 
         assert len(records) == 0, "images before any scraping"
 
+        plates_directory = Path(output_directory) / "SubwellImages"
+
         # Make the scrapable directory.
-        images_directory = (
-            f"{output_directory}/SubwellImages/98ab_2023-04-06_RI1000-0276-3drop"
-        )
-        os.makedirs(images_directory)
+        plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
+        os.makedirs(plate_directory1)
 
         # Create a few scrape-able files.
         for i in range(10, 10 + image_count):
-            filename = f"{images_directory}/98ab_%02dA_1.jpg" % (i)
+            filename = plate_directory1 / ("98ab_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
                 stream.write("")
 
         # Make another scrapable directory with a different barcode.
-        images_directory = (
-            f"{output_directory}/SubwellImages/98ac_2023-04-06_RI1000-0276-3drop"
-        )
-        os.makedirs(images_directory)
+        plate_directory2 = plates_directory / "98ac_2023-04-06_RI1000-0276-3drop"
+        os.makedirs(plate_directory2)
 
         # Create a few more scrape-able files on a plate with a different barcode.
-        for i in range(10, 10 + image_count):
-            filename = f"{images_directory}/98ac_%02dA_1.jpg" % (i)
+        for i in range(10, 10 + image_count + 1):
+            filename = plate_directory2 / ("98ac_%02dA_1.jpg" % (i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -167,10 +169,43 @@ class CollectorTester(Base):
 
         # Wait a couple more seconds to make sure there are no extra images appearing.
         await asyncio.sleep(2.0)
-        # Get all images.
-        records = await xchembku.fetch_crystal_wells_filenames()
 
+        # Get all images in the database.
+        records = await xchembku.fetch_crystal_wells_filenames()
         assert len(records) == image_count, "images after scraping"
+
+        # The two plate directories should have been emptied.
+        count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
+        assert count == 0, "first plate_directory"
+
+        count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
+        assert count == 0, "second plate_directory"
+
+        # We should have ingested the first barcode.
+        ingested_directory = (
+            Path(
+                self.__collector_specification["type_specific_tbd"][
+                    "ingested_directory"
+                ]
+            )
+            / plate_directory1.name
+        )
+        count = sum(1 for _ in ingested_directory.glob("*") if _.is_file())
+        assert count == image_count, f"ingested_directory {str(ingested_directory)}"
+
+        # We should have send the second barcode to the nobarcode area.
+        nobarcode_directory = (
+            Path(
+                self.__collector_specification["type_specific_tbd"][
+                    "nobarcode_directory"
+                ]
+            )
+            / plate_directory2.name
+        )
+        count = sum(1 for _ in nobarcode_directory.glob("*") if _.is_file())
+        assert (
+            count == image_count + 1
+        ), f"nobarcode_directory {str(nobarcode_directory)}"
 
     # ----------------------------------------------------------------------------------------
 

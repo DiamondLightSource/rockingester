@@ -30,9 +30,10 @@ rockingester_collector_specification_direct_poll:
     &ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
     type: "rockingester_lib.collectors.direct_poll"
     type_specific_tbd:
-        directories:
+        plates_directories:
             - "${output_directory}/SubwellImages"
-        recursive: True
+        ingested_directory: "${output_directory}/SubwellImages_ingested"
+        nobarcode_directory: "${output_directory}/SubwellImages_nobarcode"
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
 
 # The rockingester client/server composite.
