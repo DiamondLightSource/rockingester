@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2

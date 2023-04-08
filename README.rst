@@ -33,7 +33,7 @@ Does this have anything useful?
 
 As for the luigi stuff, one of the scripts in the /dls/science/groups/i04-1/software/luigi_pipeline/imager_pipe/ creates the filename after extracting info from the SQL server on the Formulatrix. I think the 9b5j part is the barcode, yes, but you might have to dig into the scripts there to find out the logic behind it all.
 
-By the way if you want to access the FOrmulatrix /Rockmaker from Windows you can brose to access the RockMaker Imager `\\cs04r-nas01-02\rockimager\`
+By the way if you want to access the FOrmulatrix /Rockmaker from Windows you can brose to access the RockMaker Imager \\cs04r-nas01-02\rockimager
 
 You see like:
 \\cs04r-nas01-02\rockimager\rockimager\RockMakerStorage\WellImages\539\plateID_14539\batchID_72673

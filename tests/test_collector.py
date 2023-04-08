@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import os
 import time
 from pathlib import Path
 
@@ -132,7 +131,7 @@ class CollectorTester(Base):
             visit=visit,
         )
 
-        await xchembku.originate_crystal_plates([crystal_plate_model])
+        await xchembku.upsert_crystal_plates([crystal_plate_model])
 
         # Get list of images before we create any of the scrape-able files.
         records = await xchembku.fetch_crystal_wells_filenames()
