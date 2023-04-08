@@ -1,6 +1,6 @@
 # ********** Please don't edit this file!
 # ********** It has been generated automatically by dae_devops version 0.5.2.
-# ********** For repository_name rockingest
+# ********** For repository_name rockingester
 
 import json
 import logging
@@ -102,4 +102,4 @@ def main(args=None):
 if __name__ == "__main__":
     main()
 
-# dae_devops_fingerprint 2bbad9717cc1c95c21f829b86e382ce7
+# dae_devops_fingerprint c58785ffd04f4bbcdcc6a3025f6e694e
