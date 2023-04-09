@@ -168,7 +168,8 @@ class DirectPoll(CollectorBase):
         plate_models = await self.__xchembku.fetch_crystal_plates(
             CrystalPlateFilterModel(
                 from_formulatrix__plate__id=self.__latest_formulatrix__plate__id
-            )
+            ),
+            why="[ROCKINGESTER POLL]",
         )
 
         # Add the plates to the list, assumed sorted by formulatrix__plate__id.

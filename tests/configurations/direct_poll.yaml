@@ -23,3 +23,5 @@ rockingester_collector_specification:
         ingest_only_barcodes:
             - 98ab
             - 98ac
+    context:
+        start_as: direct

@@ -60,7 +60,7 @@ class Context(ContextBase):
             await self.server.start_process()
 
         # Not running as a service?
-        elif self.context_specification.get("start_as") is None:
+        elif self.context_specification.get("start_as") == "direct":
             # We need to activate the tick() task.
             await self.server.activate()
 
@@ -86,5 +86,5 @@ class Context(ContextBase):
             if self.context_specification.get("start_as") == "coro":
                 await self.server.direct_shutdown()
 
-            if self.context_specification.get("start_as") is None:
+            if self.context_specification.get("start_as") == "direct":
                 await self.server.deactivate()
