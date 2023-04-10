@@ -206,7 +206,7 @@ class DirectPoll(CollectorBase):
         ]
 
         logger.info(
-            f"[SCRDIR] found {len(plate_names)} plate directories in {plates_directory}"
+            f"[ROCKINGESTER POLL] found {len(plate_names)} plate directories in {plates_directory}"
         )
 
         for plate_name in plate_names:
@@ -270,6 +270,10 @@ class DirectPoll(CollectorBase):
         except OSError:
             pass
 
+        logger.info(
+            f"moved plate {plate_directory.name} to {self.__nobarcode_directory}"
+        )
+
     # ----------------------------------------------------------------------------------------
     async def scrape_plate_directory(
         self,
@@ -302,6 +306,10 @@ class DirectPoll(CollectorBase):
         except OSError:
             pass
 
+        logger.info(
+            f"moved well images from plate {plate_directory.name} to {self.__ingested_directory}"
+        )
+
     # ----------------------------------------------------------------------------------------
     async def ingest_well(
         self,
@@ -317,10 +325,19 @@ class DirectPoll(CollectorBase):
         TODO: Protect against ingesting an image file which is currently being written by Luigi.
         """
 
-        well_filename = plate_directory / well_name
+        # Make the "object store" directory where we will permanently store ingested well image files.
+        target = self.__ingested_directory / plate_directory.name
+        try:
+            target.mkdir(parents=True)
+        except FileExistsError:
+            pass
+
+        input_well_filename = plate_directory / well_name
+        ingested_well_filename = target / well_name
+
         error = None
         try:
-            image = Image.open(well_filename)
+            image = Image.open(input_well_filename)
             width, height = image.size
         except Exception as exception:
             error = str(exception)
@@ -328,7 +345,7 @@ class DirectPoll(CollectorBase):
             height = None
 
         crystal_well_model = CrystalWellModel(
-            filename=str(well_filename),
+            filename=str(ingested_well_filename),
             crystal_plate_uuid=crystal_plate_model.uuid,
             error=error,
             width=width,
@@ -336,19 +353,13 @@ class DirectPoll(CollectorBase):
         )
 
         # Here we originate the crystal well records into xchembku.
-        # TODO: Handle case where the same crystal well filename has already been originated.
-        await self.__xchembku.originate_crystal_wells([crystal_well_model])
-
-        target = self.__ingested_directory / plate_directory.name
-        try:
-            target.mkdir(parents=True)
-        except FileExistsError:
-            pass
+        # TODO: Handle case where we upsert the crystal_well record bit the image object store fails to accept image binary.
+        await self.__xchembku.upsert_crystal_wells([crystal_well_model])
 
         # Move to ingested, replacing what might already be there.
         shutil.move(
-            well_filename,
-            target / well_name,
+            input_well_filename,
+            ingested_well_filename,
         )
 
     # ----------------------------------------------------------------------------------------
