@@ -6,6 +6,7 @@ from pathlib import Path
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
+from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
 from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 
 # Client context creator.
@@ -134,9 +135,11 @@ class CollectorTester(Base):
         await xchembku.upsert_crystal_plates([crystal_plate_model])
 
         # Get list of images before we create any of the scrape-able files.
-        records = await xchembku.fetch_crystal_wells_filenames()
+        crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
 
-        assert len(records) == 0, "images before any new files are put in scrapable"
+        assert (
+            len(crystal_well_models) == 0
+        ), "images before any new files are put in scrapable"
 
         plates_directory = Path(output_directory) / "SubwellImages"
 
@@ -170,15 +173,15 @@ class CollectorTester(Base):
         while True:
 
             # Get all images.
-            records = await xchembku.fetch_crystal_wells_filenames()
+            crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
 
             # Stop looping when we got the images we expect.
-            if len(records) >= image_count:
+            if len(crystal_well_models) >= image_count:
                 break
 
             if time.time() - time0 > timeout:
                 raise RuntimeError(
-                    f"only {len(records)} images out of {image_count}"
+                    f"only {len(crystal_well_models)} images out of {image_count}"
                     f" registered within {timeout} seconds"
                 )
             await asyncio.sleep(1.0)
@@ -186,9 +189,22 @@ class CollectorTester(Base):
         # Wait a couple more seconds to make sure there are no extra images appearing.
         await asyncio.sleep(2.0)
 
+        # Make sure the crystal plate record got its collector stem recorded.
+        crystal_plate_models = await xchembku.fetch_crystal_plates(
+            CrystalPlateFilterModel()
+        )
+        assert len(crystal_plate_models) == 1
+        assert crystal_plate_models[0].rockminer_collected_stem == plate_directory1.stem
+
         # Get all images in the database.
-        records = await xchembku.fetch_crystal_wells_filenames()
-        assert len(records) == image_count, "images after scraping"
+        crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
+        assert len(crystal_well_models) == image_count, "images after scraping"
+
+        # Make sure the positions got recorded right in the wells.
+        i = 10
+        for crystal_well_model in crystal_well_models:
+            assert crystal_well_model.position == f"{i}A1"
+            i += 1
 
         # The two plate directories should have been emptied.
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
@@ -213,7 +229,7 @@ class CollectorTester(Base):
             count == image_count
         ), f"ingested_directory images {str(self.__ingested_directory)}"
 
-        # We should have send the second barcode to the nobarcode area.
+        # We should have sent the second barcode to the nobarcode area.
         count = sum(1 for _ in self.__nobarcode_directory.glob("*") if _.is_dir())
         assert count == 1, f"nobarcode_directory {str(self.__nobarcode_directory)}"
         count = sum(

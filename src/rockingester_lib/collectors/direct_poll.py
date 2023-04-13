@@ -286,6 +286,14 @@ class DirectPoll(CollectorBase):
         Adds discovered files to internal list which gets pushed when it reaches a configurable size.
         """
 
+        # Update the path stem in the crystal plate record.
+        # TODO: Consider if important to report/record same barcodes on different rockmaker directories.
+        if crystal_plate_model.rockminer_collected_stem is None:
+            crystal_plate_model.rockminer_collected_stem = plate_directory.stem
+            await self.__xchembku.upsert_crystal_plates(
+                [crystal_plate_model], "update rockminer_collected_stem"
+            )
+
         # Get all the well images in the plate directory.
         well_names = [
             entry.name for entry in os.scandir(plate_directory) if entry.is_file()
@@ -293,6 +301,7 @@ class DirectPoll(CollectorBase):
 
         for well_name in well_names:
             # Process well's image file.
+            # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
             await self.ingest_well(
                 plate_directory,
                 well_name,
@@ -335,6 +344,14 @@ class DirectPoll(CollectorBase):
         input_well_filename = plate_directory / well_name
         ingested_well_filename = target / well_name
 
+        # Stems are like "9acx_01A_1".
+        parts = Path(well_name).stem.split("_")
+        if len(parts) > 1:
+            # Strip off the leading 4-letter barcode and underscore.
+            position = "".join(parts[1:])
+        else:
+            position = parts[0]
+
         error = None
         try:
             image = Image.open(input_well_filename)
@@ -345,6 +362,7 @@ class DirectPoll(CollectorBase):
             height = None
 
         crystal_well_model = CrystalWellModel(
+            position=position,
             filename=str(ingested_well_filename),
             crystal_plate_uuid=crystal_plate_model.uuid,
             error=error,
