@@ -8,6 +8,7 @@ from typing import Dict
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
+from dls_utilpack.visit import get_xchem_directory
 from PIL import Image
 
 # Dataface client context.
@@ -46,8 +47,14 @@ class DirectPoll(CollectorBase):
 
         type_specific_tbd = require(s, self.specification(), "type_specific_tbd")
         self.__plates_directories = require(s, type_specific_tbd, "plates_directories")
-        self.__ingested_directory = Path(
-            require(s, type_specific_tbd, "ingested_directory")
+        self.__visits_directory = Path(
+            require(s, type_specific_tbd, "visits_directory")
+        )
+        self.__visit_plates_subdirectory = Path(
+            require(s, type_specific_tbd, "visit_plates_subdirectory")
+        )
+        self.__novisit_directory = Path(
+            require(s, type_specific_tbd, "novisit_directory")
         )
         self.__nobarcode_directory = Path(
             require(s, type_specific_tbd, "nobarcode_directory")
@@ -76,15 +83,15 @@ class DirectPoll(CollectorBase):
         Then it starts the coro task to awaken every few seconds to scrape the directories.
         """
 
-        # Make sure the nobarcode_directory is created.
+        # Make sure the novisit_directory is created.
         try:
-            self.__nobarcode_directory.mkdir(parents=True)
+            self.__novisit_directory.mkdir(parents=True)
         except FileExistsError:
             pass
 
-        # Make sure the ingested_directory is created.
+        # Make sure the nobarcode_directory is created.
         try:
-            self.__ingested_directory.mkdir(parents=True)
+            self.__nobarcode_directory.mkdir(parents=True)
         except FileExistsError:
             pass
 
@@ -225,26 +232,46 @@ class DirectPoll(CollectorBase):
 
             # This plate is in the database?
             if crystal_plate_model is not None:
-                await self.scrape_plate_directory(
-                    plates_directory / plate_name,
-                    crystal_plate_model,
-                )
+                visit_directory = None
+                try:
+                    visit_directory = Path(
+                        get_xchem_directory(
+                            self.__visits_directory, crystal_plate_model.visit
+                        )
+                    )
+
+                    await self.scrape_plate_directory(
+                        plates_directory / plate_name,
+                        crystal_plate_model,
+                        visit_directory,
+                    )
+                except Exception as exception:
+                    logger.debug(f"novisit because: {str(exception)}")
+                    await self.__move_without_ingesting(
+                        plates_directory / plate_name,
+                        self.__novisit_directory,
+                    )
+
             # Not in the database?
             else:
-                await self.move_to_nobarcode(plates_directory / plate_name)
+                await self.__move_without_ingesting(
+                    plates_directory / plate_name,
+                    self.__nobarcode_directory,
+                )
 
     # ----------------------------------------------------------------------------------------
-    async def move_to_nobarcode(
+    async def __move_without_ingesting(
         self,
         plate_directory: Path,
+        target_directory: Path,
     ) -> None:
         """
-        Move a plate directory's well images to the "nobarcode" area.
+        Move a plate directory's well images to the given target without ingesting it.
 
         Then remove the plate directory.
         """
 
-        target = self.__nobarcode_directory / plate_directory.name
+        target = target_directory / plate_directory.name
         try:
             target.mkdir(parents=True)
         except FileExistsError:
@@ -256,7 +283,7 @@ class DirectPoll(CollectorBase):
         ]
 
         for well_name in well_names:
-            # Move to nobarcode, replacing what might already be there.
+            # Move to target, replacing what might already be there.
             # TODO: Protect against moving an image file which is currently being written by Luigi.
             shutil.move(
                 plate_directory / well_name,
@@ -270,15 +297,14 @@ class DirectPoll(CollectorBase):
         except OSError:
             pass
 
-        logger.info(
-            f"moved plate {plate_directory.name} to {self.__nobarcode_directory}"
-        )
+        logger.info(f"moved plate {plate_directory.name} to {target_directory}")
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plate_directory(
         self,
         plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
+        visit_directory: Path,
     ) -> None:
         """
         Scrape a single directory looking for new files.
@@ -299,6 +325,9 @@ class DirectPoll(CollectorBase):
             entry.name for entry in os.scandir(plate_directory) if entry.is_file()
         ]
 
+        # Sort so that tests are deterministic.
+        well_names.sort()
+
         for well_name in well_names:
             # Process well's image file.
             # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
@@ -306,6 +335,7 @@ class DirectPoll(CollectorBase):
                 plate_directory,
                 well_name,
                 crystal_plate_model,
+                visit_directory,
             )
 
         # Remove the source directory, which should now be empty.
@@ -316,7 +346,7 @@ class DirectPoll(CollectorBase):
             pass
 
         logger.info(
-            f"moved well images from plate {plate_directory.name} to {self.__ingested_directory}"
+            f"moved well images from plate {plate_directory.name} to {self.__novisit_directory}"
         )
 
     # ----------------------------------------------------------------------------------------
@@ -325,6 +355,7 @@ class DirectPoll(CollectorBase):
         plate_directory: Path,
         well_name: str,
         crystal_plate_model: CrystalPlateModel,
+        visit_directory: Path,
     ) -> None:
         """
         Ingest the well into the database.
@@ -335,7 +366,9 @@ class DirectPoll(CollectorBase):
         """
 
         # Make the "object store" directory where we will permanently store ingested well image files.
-        target = self.__ingested_directory / plate_directory.name
+        target = (
+            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
+        )
         try:
             target.mkdir(parents=True)
         except FileExistsError:

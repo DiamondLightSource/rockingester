@@ -3,6 +3,8 @@ import logging
 import time
 from pathlib import Path
 
+from dls_utilpack.visit import get_xchem_subdirectory
+
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
@@ -95,8 +97,12 @@ class CollectorTester(Base):
         collector_client_context = CollectorClientContext(collector_specification)
 
         # Remember the collector specification so we can assert some things later.
-        self.__ingested_directory = Path(multiconf_dict["ingested_directory"])
+        self.__visits_directory = Path(multiconf_dict["visits_directory"])
+        self.__visit_plates_subdirectory = Path(
+            multiconf_dict["visit_plates_subdirectory"]
+        )
         self.__nobarcode_directory = Path(multiconf_dict["nobarcode_directory"])
+        self.__novisit_directory = Path(multiconf_dict["novisit_directory"])
 
         image_count = 2
 
@@ -125,14 +131,35 @@ class CollectorTester(Base):
         xchembku = xchembku_datafaces_get_default()
 
         # Make the plate on which the wells reside.
-        visit = "cm00001-1"
-        crystal_plate_model = CrystalPlateModel(
-            formulatrix__plate__id=10,
-            barcode="98ab",
-            visit=visit,
+        visit = "cm00001-1_otherstuff"
+        created_crystal_plate_models = []
+        created_crystal_plate_models.append(
+            CrystalPlateModel(
+                formulatrix__plate__id=10,
+                barcode="98ab",
+                visit=visit,
+            )
         )
 
-        await xchembku.upsert_crystal_plates([crystal_plate_model])
+        nobarcode_barcode = "98ac"
+
+        # Create a crystal plate model with a good barcode but bad visit.
+        novisit_barcode = "98ad"
+        created_crystal_plate_models.append(
+            CrystalPlateModel(
+                formulatrix__plate__id=11,
+                barcode=novisit_barcode,
+                visit=("X" + visit),
+            )
+        )
+
+        excluded_barcode = "98ae"
+
+        await xchembku.upsert_crystal_plates(created_crystal_plate_models)
+
+        visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
+        visit_directory.mkdir(parents=True)
+        rockingester_directory = visit_directory / self.__visit_plates_subdirectory
 
         # Get list of images before we create any of the scrape-able files.
         crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
@@ -144,6 +171,7 @@ class CollectorTester(Base):
         plates_directory = Path(output_directory) / "SubwellImages"
 
         # Make the scrapable directory with some files.
+        # This one gets scraped as normal.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
         plate_directory1.mkdir(parents=True)
         for i in range(10, 10 + image_count):
@@ -152,18 +180,37 @@ class CollectorTester(Base):
                 stream.write("")
 
         # Make another scrapable directory with a different barcode.
-        plate_directory2 = plates_directory / "98ac_2023-04-06_RI1000-0276-3drop"
+        # This one gets moved into nobarcode since it doesn't match any plate.
+        plate_directory2 = (
+            plates_directory / f"{nobarcode_barcode}_2023-04-06_RI1000-0276-3drop"
+        )
         plate_directory2.mkdir(parents=True)
-        for i in range(10, 10 + image_count + 1):
-            filename = plate_directory2 / ("98ac_%02dA_1.jpg" % (i))
+        nobarcode_extra_images = 3
+        for i in range(10, 10 + image_count + nobarcode_extra_images):
+            filename = plate_directory2 / ("%s_%02dA_1.jpg" % (nobarcode_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
 
         # Make yet another scrapable directory with a different barcode.
-        plate_directory3 = plates_directory / "98ad_2023-04-06_RI1000-0276-3drop"
+        # This one gets moved into novisit since it matches a plate with a bad visit name.
+        plate_directory3 = (
+            plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
+        )
         plate_directory3.mkdir(parents=True)
-        for i in range(10, 10 + image_count + 2):
-            filename = plate_directory3 / ("98ad_%02dA_1.jpg" % (i))
+        for i in range(10, 10 + image_count):
+            filename = plate_directory3 / ("%s_%02dA_1.jpg" % (novisit_barcode, i))
+            with open(filename, "w") as stream:
+                stream.write("")
+
+        # Make yet another scrapable directory with a different barcode.
+        # This one gets completely ignored because it's not in the explicit list.
+        plate_directory4 = (
+            plates_directory / f"{excluded_barcode}_2023-04-06_RI1000-0276-3drop"
+        )
+        plate_directory4.mkdir(parents=True)
+        excluded_extra_images = 2
+        for i in range(10, 10 + image_count + excluded_extra_images):
+            filename = plate_directory4 / ("%s_%02dA_1.jpg" % (excluded_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -193,7 +240,6 @@ class CollectorTester(Base):
         crystal_plate_models = await xchembku.fetch_crystal_plates(
             CrystalPlateFilterModel()
         )
-        assert len(crystal_plate_models) == 1
         assert crystal_plate_models[0].rockminer_collected_stem == plate_directory1.stem
 
         # Get all images in the database.
@@ -206,28 +252,31 @@ class CollectorTester(Base):
             assert crystal_well_model.position == f"{i}A1"
             i += 1
 
-        # The two plate directories should have been emptied.
+        # The three explicit plate directories should have been emptied.
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
         assert count == 0, "first plate_directory"
 
         count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
         assert count == 0, "second plate_directory"
 
-        # The third plate directory is left intact.
         count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
-        assert count == image_count + 2, "third plate_directory"
+        assert count == 0, "third plate_directory"
+
+        # The fourth plate directory is left intact.
+        count = sum(1 for _ in plate_directory4.glob("*") if _.is_file())
+        assert count == image_count + excluded_extra_images, "fourth plate_directory"
 
         # We should have ingested the first barcode.
-        count = sum(1 for _ in self.__ingested_directory.glob("*") if _.is_dir())
-        assert count == 1, f"ingested_directory {str(self.__ingested_directory)}"
+        count = sum(1 for _ in rockingester_directory.glob("*") if _.is_dir())
+        assert count == 1, f"rockingester_directory {str(rockingester_directory)}"
         count = sum(
             1
-            for _ in (self.__ingested_directory / plate_directory1.name).glob("*")
+            for _ in (rockingester_directory / plate_directory1.name).glob("*")
             if _.is_file()
         )
         assert (
             count == image_count
-        ), f"ingested_directory images {str(self.__ingested_directory)}"
+        ), f"ingested_directory images {str(rockingester_directory)}"
 
         # We should have sent the second barcode to the nobarcode area.
         count = sum(1 for _ in self.__nobarcode_directory.glob("*") if _.is_dir())
@@ -238,8 +287,20 @@ class CollectorTester(Base):
             if _.is_file()
         )
         assert (
-            count == image_count + 1
+            count == image_count + nobarcode_extra_images
         ), f"nobarcode_directory images {str(self.__nobarcode_directory)}"
+
+        # We should have sent the third barcode to the novisit area.
+        count = sum(1 for _ in self.__novisit_directory.glob("*") if _.is_dir())
+        assert count == 1, f"novisit_directory {str(self.__novisit_directory)}"
+        count = sum(
+            1
+            for _ in (self.__novisit_directory / plate_directory3.name).glob("*")
+            if _.is_file()
+        )
+        assert (
+            count == image_count
+        ), f"novisit_directory images {str(self.__novisit_directory)}"
 
     # ----------------------------------------------------------------------------------------
 
