@@ -346,7 +346,7 @@ class DirectPoll(CollectorBase):
             pass
 
         logger.info(
-            f"moved well images from plate {plate_directory.name} to {self.__novisit_directory}"
+            f"moved well images from plate {plate_directory.name} to {visit_directory / self.__visit_plates_subdirectory}"
         )
 
     # ----------------------------------------------------------------------------------------
