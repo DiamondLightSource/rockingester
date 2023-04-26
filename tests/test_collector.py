@@ -197,7 +197,8 @@ class CollectorTester(Base):
             plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory3.mkdir(parents=True)
-        for i in range(10, 10 + image_count):
+        novisit_extra_images = 6
+        for i in range(10, 10 + image_count + novisit_extra_images):
             filename = plate_directory3 / ("%s_%02dA_1.jpg" % (novisit_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
@@ -259,8 +260,10 @@ class CollectorTester(Base):
         count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
         assert count == 0, "second plate_directory"
 
+        # The third plate directory (novisit) is left intact.
+        # We keep "novisit" plate directories for now, since Texrank still needs them.
         count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
-        assert count == 0, "third plate_directory"
+        assert count == image_count + novisit_extra_images, "third plate_directory"
 
         # The fourth plate directory is left intact.
         count = sum(1 for _ in plate_directory4.glob("*") if _.is_file())
@@ -290,17 +293,15 @@ class CollectorTester(Base):
             count == image_count + nobarcode_extra_images
         ), f"nobarcode_directory images {str(self.__nobarcode_directory)}"
 
-        # We should have sent the third barcode to the novisit area.
+        # We should NOT have sent the third (novisit) barcode to the novisit area.
         count = sum(1 for _ in self.__novisit_directory.glob("*") if _.is_dir())
-        assert count == 1, f"novisit_directory {str(self.__novisit_directory)}"
+        assert count == 0, f"novisit_directory {str(self.__novisit_directory)}"
         count = sum(
             1
             for _ in (self.__novisit_directory / plate_directory3.name).glob("*")
             if _.is_file()
         )
-        assert (
-            count == image_count
-        ), f"novisit_directory images {str(self.__novisit_directory)}"
+        assert count == 0, f"novisit_directory images {str(self.__novisit_directory)}"
 
     # ----------------------------------------------------------------------------------------
 

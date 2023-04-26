@@ -75,6 +75,9 @@ class DirectPoll(CollectorBase):
         # This is the list of plates indexed by their barcode.
         self.__crystal_plate_models_by_barcode: Dict[CrystalPlateModel] = {}
 
+        # The plate names which we have already finished handling.
+        self.__handled_plate_names = []
+
     # ----------------------------------------------------------------------------------------
     async def activate(self) -> None:
         """
@@ -217,6 +220,10 @@ class DirectPoll(CollectorBase):
         )
 
         for plate_name in plate_names:
+            # We already handled this plate name?
+            if plate_name in self.__handled_plate_names:
+                continue
+
             # Get the plate's barcode from the directory name.
             plate_barcode = plate_name[0:4]
 
@@ -245,15 +252,22 @@ class DirectPoll(CollectorBase):
                         crystal_plate_model,
                         visit_directory,
                     )
+                # This barcode is in the database, but the visit name
+                # is not properly formatted or the visit directory doesn't exist.
                 except Exception as exception:
-                    logger.debug(f"novisit because: {str(exception)}")
-                    await self.__move_without_ingesting(
-                        plates_directory / plate_name,
-                        self.__novisit_directory,
-                    )
+                    # For now, don't move these out of SubwellImages since Texrank expects them here.
+                    # TODO: Find out how to disable Texrank jobs from running at all.
+                    # await self.__move_without_ingesting(
+                    #     plates_directory / plate_name,
+                    #     self.__novisit_directory,
+                    # )
 
-            # Not in the database?
+                    # Remember we "handled" this one.
+                    self.__handled_plate_names.append(plate_name)
+
+            # Not in the formulatrix's database?
             else:
+                # Move the plate directory somewhere else.
                 await self.__move_without_ingesting(
                     plates_directory / plate_name,
                     self.__nobarcode_directory,
