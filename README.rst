@@ -41,6 +41,18 @@ You see like:
 The batch ID proably relates to the inspection... a plate is inspected multiple times and each inspection has a batch ID.
 There may be some clues in the get_barcodes.py script in the imager_pipe directory.
 
+Algorithm
+-----------------------------------------------------------------------
+Looks in SubwellImages
+
+Uses first 4 letters of each subdirectory as "barcode".
+
+If barcode is NOT in the plates mined from the formulatrix, then moves subdirectory to SubwellImages_nobarcode.
+
+Otherrwise, if name of plate is a valid visit name, and the visit directory exists, then copies the images to the visit directory and inserts them into the database.
+
+Otherwise ignores the subdirectory.
+
 Documentation
 -----------------------------------------------------------------------
 

@@ -339,6 +339,24 @@ class DirectPoll(CollectorBase):
             entry.name for entry in os.scandir(plate_directory) if entry.is_file()
         ]
 
+        # Don't handle the plate directory until all images have arrived.
+        if len(well_names) < 288:
+            return
+
+        # Name of the destination directory where we will permanently store ingested well image files.
+        target = (
+            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
+        )
+
+        # We have already put this plate directory into the visit directory?
+        # And presumable the database?
+        if target.is_dir():
+            # Remember we "handled" this one.
+            self.__handled_plate_names.append(plate_directory.stem)
+            return
+
+        target.mkdir(parents=True)
+
         # Sort so that tests are deterministic.
         well_names.sort()
 
@@ -349,19 +367,15 @@ class DirectPoll(CollectorBase):
                 plate_directory,
                 well_name,
                 crystal_plate_model,
-                visit_directory,
+                target,
             )
 
-        # Remove the source directory, which should now be empty.
-        # TODO: Protect against removing an plate directory which is currently being written by Luigi.
-        try:
-            plate_directory.rmdir()
-        except OSError:
-            pass
-
         logger.info(
-            f"moved well images from plate {plate_directory.name} to {visit_directory / self.__visit_plates_subdirectory}"
+            f"copied well images from plate {plate_directory.name} to {visit_directory / self.__visit_plates_subdirectory}"
         )
+
+        # Remember we "handled" this one.
+        self.__handled_plate_names.append(plate_directory.stem)
 
     # ----------------------------------------------------------------------------------------
     async def ingest_well(
@@ -369,24 +383,13 @@ class DirectPoll(CollectorBase):
         plate_directory: Path,
         well_name: str,
         crystal_plate_model: CrystalPlateModel,
-        visit_directory: Path,
+        target: Path,
     ) -> None:
         """
         Ingest the well into the database.
 
         Move the well image file to the ingested area.
-
-        TODO: Protect against ingesting an image file which is currently being written by Luigi.
         """
-
-        # Make the "object store" directory where we will permanently store ingested well image files.
-        target = (
-            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
-        )
-        try:
-            target.mkdir(parents=True)
-        except FileExistsError:
-            pass
 
         input_well_filename = plate_directory / well_name
         ingested_well_filename = target / well_name
@@ -422,7 +425,7 @@ class DirectPoll(CollectorBase):
         await self.__xchembku.upsert_crystal_wells([crystal_well_model])
 
         # Move to ingested, replacing what might already be there.
-        shutil.move(
+        shutil.copy(
             input_well_filename,
             ingested_well_filename,
         )

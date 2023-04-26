@@ -104,7 +104,7 @@ class CollectorTester(Base):
         self.__nobarcode_directory = Path(multiconf_dict["nobarcode_directory"])
         self.__novisit_directory = Path(multiconf_dict["novisit_directory"])
 
-        image_count = 2
+        scrapable_image_count = 288
 
         # Start the client context for the direct access to the xchembku.
         async with xchembku_client_context:
@@ -112,7 +112,9 @@ class CollectorTester(Base):
             async with collector_client_context:
                 # And the collector server context which starts the coro.
                 async with collector_server_context:
-                    await self.__run_part1(image_count, constants, output_directory)
+                    await self.__run_part1(
+                        scrapable_image_count, constants, output_directory
+                    )
 
                 logger.debug(
                     "------------ restarting collector server --------------------"
@@ -121,11 +123,13 @@ class CollectorTester(Base):
                 # Start the server again.
                 # This covers the case where collector starts by finding existing entries in the database and doesn't double-collect those on disk.
                 async with collector_server_context:
-                    await self.__run_part2(image_count, constants, output_directory)
+                    await self.__run_part2(
+                        scrapable_image_count, constants, output_directory
+                    )
 
     # ----------------------------------------------------------------------------------------
 
-    async def __run_part1(self, image_count, constants, output_directory):
+    async def __run_part1(self, scrapable_image_count, constants, output_directory):
         """ """
         # Reference the xchembku object which the context has set up as the default.
         xchembku = xchembku_datafaces_get_default()
@@ -174,8 +178,8 @@ class CollectorTester(Base):
         # This one gets scraped as normal.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
         plate_directory1.mkdir(parents=True)
-        for i in range(10, 10 + image_count):
-            filename = plate_directory1 / ("98ab_%02dA_1.jpg" % (i))
+        for i in range(10, 10 + scrapable_image_count):
+            filename = plate_directory1 / ("98ab_%03dA_1.jpg" % (i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -185,9 +189,9 @@ class CollectorTester(Base):
             plates_directory / f"{nobarcode_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory2.mkdir(parents=True)
-        nobarcode_extra_images = 3
-        for i in range(10, 10 + image_count + nobarcode_extra_images):
-            filename = plate_directory2 / ("%s_%02dA_1.jpg" % (nobarcode_barcode, i))
+        nobarcode_image_count = 3
+        for i in range(10, 10 + nobarcode_image_count):
+            filename = plate_directory2 / ("%s_%03dA_1.jpg" % (nobarcode_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -197,9 +201,9 @@ class CollectorTester(Base):
             plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory3.mkdir(parents=True)
-        novisit_extra_images = 6
-        for i in range(10, 10 + image_count + novisit_extra_images):
-            filename = plate_directory3 / ("%s_%02dA_1.jpg" % (novisit_barcode, i))
+        novisit_image_count = 6
+        for i in range(10, 10 + novisit_image_count):
+            filename = plate_directory3 / ("%s_%03dA_1.jpg" % (novisit_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -209,9 +213,9 @@ class CollectorTester(Base):
             plates_directory / f"{excluded_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory4.mkdir(parents=True)
-        excluded_extra_images = 2
-        for i in range(10, 10 + image_count + excluded_extra_images):
-            filename = plate_directory4 / ("%s_%02dA_1.jpg" % (excluded_barcode, i))
+        excluded_image_count = 2
+        for i in range(10, 10 + excluded_image_count):
+            filename = plate_directory4 / ("%s_%03dA_1.jpg" % (excluded_barcode, i))
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -224,12 +228,12 @@ class CollectorTester(Base):
             crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
 
             # Stop looping when we got the images we expect.
-            if len(crystal_well_models) >= image_count:
+            if len(crystal_well_models) >= scrapable_image_count:
                 break
 
             if time.time() - time0 > timeout:
                 raise RuntimeError(
-                    f"only {len(crystal_well_models)} images out of {image_count}"
+                    f"only {len(crystal_well_models)} images out of {scrapable_image_count}"
                     f" registered within {timeout} seconds"
                 )
             await asyncio.sleep(1.0)
@@ -245,29 +249,32 @@ class CollectorTester(Base):
 
         # Get all images in the database.
         crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
-        assert len(crystal_well_models) == image_count, "images after scraping"
+        assert (
+            len(crystal_well_models) == scrapable_image_count
+        ), "images after scraping"
 
         # Make sure the positions got recorded right in the wells.
         i = 10
         for crystal_well_model in crystal_well_models:
-            assert crystal_well_model.position == f"{i}A1"
+            assert crystal_well_model.position == "%03dA1" % (i)
             i += 1
 
-        # The three explicit plate directories should have been emptied.
+        # The first "scrapable" plate directory should still exist.
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
-        assert count == 0, "first plate_directory"
+        assert count == scrapable_image_count, "first (scrapable) plate_directory"
 
+        # The second "nobarcode" plate directory should no longer exist.
         count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
         assert count == 0, "second plate_directory"
 
         # The third plate directory (novisit) is left intact.
         # We keep "novisit" plate directories for now, since Texrank still needs them.
         count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
-        assert count == image_count + novisit_extra_images, "third plate_directory"
+        assert count == novisit_image_count, "third plate_directory"
 
         # The fourth plate directory is left intact.
         count = sum(1 for _ in plate_directory4.glob("*") if _.is_file())
-        assert count == image_count + excluded_extra_images, "fourth plate_directory"
+        assert count == excluded_image_count, "fourth plate_directory"
 
         # We should have ingested the first barcode.
         count = sum(1 for _ in rockingester_directory.glob("*") if _.is_dir())
@@ -278,7 +285,7 @@ class CollectorTester(Base):
             if _.is_file()
         )
         assert (
-            count == image_count
+            count == scrapable_image_count
         ), f"ingested_directory images {str(rockingester_directory)}"
 
         # We should have sent the second barcode to the nobarcode area.
@@ -290,7 +297,7 @@ class CollectorTester(Base):
             if _.is_file()
         )
         assert (
-            count == image_count + nobarcode_extra_images
+            count == nobarcode_image_count
         ), f"nobarcode_directory images {str(self.__nobarcode_directory)}"
 
         # We should NOT have sent the third (novisit) barcode to the novisit area.
@@ -305,7 +312,7 @@ class CollectorTester(Base):
 
     # ----------------------------------------------------------------------------------------
 
-    async def __run_part2(self, image_count, constants, output_directory):
+    async def __run_part2(self, scrapable_image_count, constants, output_directory):
         """ """
         # Reference the xchembku object which the context has set up as the default.
         xchembku = xchembku_datafaces_get_default()
@@ -314,4 +321,4 @@ class CollectorTester(Base):
         # Get all images after servers start up and run briefly.
         records = await xchembku.fetch_crystal_wells_filenames()
 
-        assert len(records) == image_count, "images after restarting scraper"
+        assert len(records) == scrapable_image_count, "images after restarting scraper"
