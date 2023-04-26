@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
@@ -355,24 +355,33 @@ class DirectPoll(CollectorBase):
             self.__handled_plate_names.append(plate_directory.stem)
             return
 
-        target.mkdir(parents=True)
-
         # Sort so that tests are deterministic.
         well_names.sort()
 
+        crystal_well_models: List[CrystalWellModel] = []
         for well_name in well_names:
             # Process well's image file.
             # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
-            await self.ingest_well(
-                plate_directory,
-                well_name,
-                crystal_plate_model,
-                target,
+            crystal_well_models.append(
+                await self.ingest_well(
+                    plate_directory,
+                    well_name,
+                    crystal_plate_model,
+                    target,
+                )
             )
 
-        logger.info(
-            f"copied well images from plate {plate_directory.name} to {visit_directory / self.__visit_plates_subdirectory}"
+        # Here we create or update the crystal well records into xchembku.
+        # TODO: Handle case where we upsert the crystal_well record bit the image object store fails to accept image binary.
+        await self.__xchembku.upsert_crystal_wells(crystal_well_models)
+
+        # Copy scraped directory to visit, replacing what might already be there.
+        shutil.copytree(
+            plate_directory,
+            target,
         )
+
+        logger.info(f"copied well images from plate {plate_directory.name} to {target}")
 
         # Remember we "handled" this one.
         self.__handled_plate_names.append(plate_directory.stem)
@@ -384,7 +393,7 @@ class DirectPoll(CollectorBase):
         well_name: str,
         crystal_plate_model: CrystalPlateModel,
         target: Path,
-    ) -> None:
+    ) -> CrystalWellModel:
         """
         Ingest the well into the database.
 
@@ -420,15 +429,7 @@ class DirectPoll(CollectorBase):
             height=height,
         )
 
-        # Here we originate the crystal well records into xchembku.
-        # TODO: Handle case where we upsert the crystal_well record bit the image object store fails to accept image binary.
-        await self.__xchembku.upsert_crystal_wells([crystal_well_model])
-
-        # Move to ingested, replacing what might already be there.
-        shutil.copy(
-            input_well_filename,
-            ingested_well_filename,
-        )
+        return crystal_well_model
 
     # ----------------------------------------------------------------------------------------
     async def close_client_session(self):

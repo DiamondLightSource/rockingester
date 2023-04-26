@@ -43,7 +43,7 @@ There may be some clues in the get_barcodes.py script in the imager_pipe directo
 
 Algorithm
 -----------------------------------------------------------------------
-Looks in SubwellImages
+Looks in SubwellImages directory.
 
 Uses first 4 letters of each subdirectory as "barcode".
 
@@ -52,6 +52,10 @@ If barcode is NOT in the plates mined from the formulatrix, then moves subdirect
 Otherrwise, if name of plate is a valid visit name, and the visit directory exists, then copies the images to the visit directory and inserts them into the database.
 
 Otherwise ignores the subdirectory.
+
+We have to leave all plate directories in SubwellImages since this is where Texrank expects them.
+
+After we don't need Texrank, then we can move the non-visit directories into SubwellImages_novisit, and move (instead of copy) them for good visits.  This will keep SubwellImages clean and more efficient to poll.
 
 Documentation
 -----------------------------------------------------------------------
