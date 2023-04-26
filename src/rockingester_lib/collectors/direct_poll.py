@@ -8,7 +8,7 @@ from typing import Dict, List
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
-from dls_utilpack.visit import get_xchem_directory
+from dls_utilpack.visit import VisitNotFound, get_xchem_directory
 from PIL import Image
 
 # Dataface client context.
@@ -246,7 +246,12 @@ class DirectPoll(CollectorBase):
                             self.__visits_directory, crystal_plate_model.visit
                         )
                     )
+                except ValueError:
+                    pass
+                except VisitNotFound:
+                    pass
 
+                if visit_directory is not None:
                     await self.scrape_plate_directory(
                         plates_directory / plate_name,
                         crystal_plate_model,
@@ -254,7 +259,7 @@ class DirectPoll(CollectorBase):
                     )
                 # This barcode is in the database, but the visit name
                 # is not properly formatted or the visit directory doesn't exist.
-                except Exception as exception:
+                else:
                     # For now, don't move these out of SubwellImages since Texrank expects them here.
                     # TODO: Find out how to disable Texrank jobs from running at all.
                     # await self.__move_without_ingesting(
