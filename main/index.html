@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>rockingester &#8212; rockingester 1.1.1.dev5+gf5517b9 documentation</title>
+    <title>rockingester &#8212; rockingester 1.1.2.dev1+gbfb8e79 documentation</title>
   
   
   
@@ -348,11 +348,11 @@ There may be some clues in the get_barcodes.py script in the imager_pipe directo
 <h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this heading">#</a></h2>
 <p>Looks in SubwellImages directory.</p>
 <p>Uses first 4 letters of each subdirectory as “barcode”.</p>
-<p>If barcode is NOT in the plates mined from the formulatrix, then moves subdirectory to SubwellImages_nobarcode.</p>
+<p>If barcode is NOT in the plates mined from the formulatrix, then it is ignored.</p>
 <p>Otherrwise, if name of plate is a valid visit name, and the visit directory exists, then copies the images to the visit directory and inserts them into the database.</p>
 <p>Otherwise ignores the subdirectory.</p>
 <p>We have to leave all plate directories in SubwellImages since this is where Texrank expects them.</p>
-<p>After we don’t need Texrank, then we can move the non-visit directories into SubwellImages_novisit, and move (instead of copy) them for good visits.  This will keep SubwellImages clean and more efficient to poll.</p>
+<p>After we don’t need Texrank, then we can move the non-visit directories into something like SubwellImages_novisit, and move (instead of copy) them for good visits.  This will keep SubwellImages clean and more efficient to poll.</p>
 </section>
 <section id="documentation">
 <h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">#</a></h2>
