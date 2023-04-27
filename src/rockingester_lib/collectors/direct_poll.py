@@ -33,8 +33,8 @@ thing_type = "rockingester_lib.collectors.direct_poll"
 class DirectPoll(CollectorBase):
     """
     Object representing an image collector.
-    The behavior is to start a coro task to waken every few seconds and scan for incoming files.
-    Files are pushed to xchembku.
+    The behavior is to start a coro task to waken every few seconds and scan for newly created plate directories.
+    Image files are pushed to xchembku.
     """
 
     # ----------------------------------------------------------------------------------------
@@ -46,20 +46,21 @@ class DirectPoll(CollectorBase):
         s = f"{callsign(self)} specification", self.specification()
 
         type_specific_tbd = require(s, self.specification(), "type_specific_tbd")
+
+        # The sources for the collecting.
         self.__plates_directories = require(s, type_specific_tbd, "plates_directories")
+
+        # The root directory of all visits.
         self.__visits_directory = Path(
             require(s, type_specific_tbd, "visits_directory")
         )
+
+        # The subdirectory under a visit where to put subwell images that are collected.
         self.__visit_plates_subdirectory = Path(
             require(s, type_specific_tbd, "visit_plates_subdirectory")
         )
-        self.__novisit_directory = Path(
-            require(s, type_specific_tbd, "novisit_directory")
-        )
-        self.__nobarcode_directory = Path(
-            require(s, type_specific_tbd, "nobarcode_directory")
-        )
 
+        # Explicit list of barcodes to process (used when testing a deployment).
         self.__ingest_only_barcodes = type_specific_tbd.get("ingest_only_barcodes")
 
         # Database where we will get plate barcodes and add new wells.
@@ -70,12 +71,13 @@ class DirectPoll(CollectorBase):
         self.__keep_ticking = True
         self.__tick_future = None
 
+        # This is the last formulatrix plate we have ingested, used to avoid re-handling the same plate.
         self.__latest_formulatrix__plate__id = 0
 
         # This is the list of plates indexed by their barcode.
         self.__crystal_plate_models_by_barcode: Dict[CrystalPlateModel] = {}
 
-        # The plate names which we have already finished handling.
+        # The plate names which we have already finished handling within the current instance.
         self.__handled_plate_names = []
 
     # ----------------------------------------------------------------------------------------
@@ -85,18 +87,6 @@ class DirectPoll(CollectorBase):
 
         Then it starts the coro task to awaken every few seconds to scrape the directories.
         """
-
-        # Make sure the novisit_directory is created.
-        try:
-            self.__novisit_directory.mkdir(parents=True)
-        except FileExistsError:
-            pass
-
-        # Make sure the nobarcode_directory is created.
-        try:
-            self.__nobarcode_directory.mkdir(parents=True)
-        except FileExistsError:
-            pass
 
         # Make the xchembku client context.
         s = require(
@@ -237,89 +227,32 @@ class DirectPoll(CollectorBase):
                 plate_barcode
             )
 
-            # This plate is in the database?
-            if crystal_plate_model is not None:
-                visit_directory = None
-                try:
-                    visit_directory = Path(
-                        get_xchem_directory(
-                            self.__visits_directory, crystal_plate_model.visit
-                        )
+            # This plate is not in the database?
+            if crystal_plate_model is None:
+                continue
+
+            try:
+                visit_directory = Path(
+                    get_xchem_directory(
+                        self.__visits_directory, crystal_plate_model.visit
                     )
-                except ValueError:
-                    pass
-                except VisitNotFound:
-                    pass
-
-                if visit_directory is not None:
-                    await self.scrape_plate_directory(
-                        plates_directory / plate_name,
-                        crystal_plate_model,
-                        visit_directory,
-                    )
-                # This barcode is in the database, but the visit name
-                # is not properly formatted or the visit directory doesn't exist.
-                else:
-                    # For now, don't move these out of SubwellImages since Texrank expects them here.
-                    # TODO: Find out how to disable Texrank jobs from running at all.
-                    # await self.__move_without_ingesting(
-                    #     plates_directory / plate_name,
-                    #     self.__novisit_directory,
-                    # )
-
-                    # Remember we "handled" this one.
-                    self.__handled_plate_names.append(plate_name)
-
-            # Not in the formulatrix's database?
-            else:
-                # Move the plate directory somewhere else.
-                await self.__move_without_ingesting(
-                    plates_directory / plate_name,
-                    self.__nobarcode_directory,
                 )
+            # This is an improperly formatted visit name?
+            except ValueError:
+                continue
+            # This visit is not found on disk?
+            except VisitNotFound:
+                continue
 
-    # ----------------------------------------------------------------------------------------
-    async def __move_without_ingesting(
-        self,
-        plate_directory: Path,
-        target_directory: Path,
-    ) -> None:
-        """
-        Move a plate directory's well images to the given target without ingesting it.
-
-        Then remove the plate directory.
-        """
-
-        target = target_directory / plate_directory.name
-        try:
-            target.mkdir(parents=True)
-        except FileExistsError:
-            pass
-
-        # Get all the well images in the plate directory.
-        well_names = [
-            entry.name for entry in os.scandir(plate_directory) if entry.is_file()
-        ]
-
-        for well_name in well_names:
-            # Move to target, replacing what might already be there.
-            # TODO: Protect against moving an image file which is currently being written by Luigi.
-            shutil.move(
-                plate_directory / well_name,
-                target / well_name,
+            # Scrape the directory when all image files have arrived.
+            await self.scrape_plate_directory_when_complete(
+                plates_directory / plate_name,
+                crystal_plate_model,
+                visit_directory,
             )
 
-        # Remove the source directory, which should now be empty.
-        # TODO: Protect against removing an plate directory which is currently being written by Luigi.
-        try:
-            plate_directory.rmdir()
-        except OSError:
-            pass
-
-        logger.info(f"moved plate {plate_directory.name} to {target_directory}")
-
     # ----------------------------------------------------------------------------------------
-    async def scrape_plate_directory(
+    async def scrape_plate_directory_when_complete(
         self,
         plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
@@ -331,9 +264,21 @@ class DirectPoll(CollectorBase):
         Adds discovered files to internal list which gets pushed when it reaches a configurable size.
         """
 
-        # Update the path stem in the crystal plate record.
-        # TODO: Consider if important to report/record same barcodes on different rockmaker directories.
+        # Name of the destination directory where we will permanently store ingested well image files.
+        target = (
+            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
+        )
+
+        # We have already put this plate directory into the visit directory and presumably also the database?
+        if target.is_dir():
+            # Remember we "handled" this one.
+            self.__handled_plate_names.append(plate_directory.stem)
+            return
+
+        # This is the first time we have scraped a directory for this plate?
         if crystal_plate_model.rockminer_collected_stem is None:
+            # Update the path stem in the crystal plate record.
+            # TODO: Consider if important to report/record same barcodes on different rockmaker directories.
             crystal_plate_model.rockminer_collected_stem = plate_directory.stem
             await self.__xchembku.upsert_crystal_plates(
                 [crystal_plate_model], "update rockminer_collected_stem"
@@ -348,45 +293,35 @@ class DirectPoll(CollectorBase):
         if len(well_names) < 288:
             return
 
-        # Name of the destination directory where we will permanently store ingested well image files.
-        target = (
-            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
-        )
-
-        # We have already put this plate directory into the visit directory?
-        # And presumable the database?
-        if target.is_dir():
-            # Remember we "handled" this one.
-            self.__handled_plate_names.append(plate_directory.stem)
-            return
-
-        # Sort so that tests are deterministic.
+        # Sort wells by name so that tests are deterministic.
         well_names.sort()
 
         crystal_well_models: List[CrystalWellModel] = []
         for well_name in well_names:
-            # Process well's image file.
-            # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
-            crystal_well_models.append(
-                await self.ingest_well(
-                    plate_directory,
-                    well_name,
-                    crystal_plate_model,
-                    target,
-                )
+            # Make the well model, including image width/height.
+            crystal_well_model = await self.ingest_well(
+                plate_directory,
+                well_name,
+                crystal_plate_model,
+                target,
             )
 
+            # Append well model to the list of all wells on the plate.
+            crystal_well_models.append(crystal_well_model)
+
         # Here we create or update the crystal well records into xchembku.
-        # TODO: Handle case where we upsert the crystal_well record bit the image object store fails to accept image binary.
         await self.__xchembku.upsert_crystal_wells(crystal_well_models)
 
         # Copy scraped directory to visit, replacing what might already be there.
+        # TODO: Handle case where we upsert the crystal_well record but then unable to copy image file.
         shutil.copytree(
             plate_directory,
             target,
         )
 
-        logger.info(f"copied well images from plate {plate_directory.name} to {target}")
+        logger.info(
+            f"copied {len(well_names)} well images from plate {plate_directory.name} to {target}"
+        )
 
         # Remember we "handled" this one.
         self.__handled_plate_names.append(plate_directory.stem)
@@ -409,6 +344,7 @@ class DirectPoll(CollectorBase):
         ingested_well_filename = target / well_name
 
         # Stems are like "9acx_01A_1".
+        # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
         parts = Path(well_name).stem.split("_")
         if len(parts) > 1:
             # Strip off the leading 4-letter barcode and underscore.

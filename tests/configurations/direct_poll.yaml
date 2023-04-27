@@ -10,8 +10,6 @@ xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
 
 visits_directory: &VISITS_DIRECTORY "${output_directory}/visits"
 visit_plates_subdirectory: &VISIT_PLATES_SUBDIRECTORY "processing/rockingester"
-novisit_directory: &NONVISIT_DIRECTORY "${output_directory}/SubwellImages_novisit"
-nobarcode_directory: &NOBARCODE_DIRECTORY "${output_directory}/SubwellImages_nobarcode"
 
 # The rockingester direct access.
 rockingester_collector_specification:
@@ -21,8 +19,6 @@ rockingester_collector_specification:
             - "${output_directory}/SubwellImages"
         visits_directory: *VISITS_DIRECTORY
         visit_plates_subdirectory: *VISIT_PLATES_SUBDIRECTORY
-        novisit_directory: *NONVISIT_DIRECTORY
-        nobarcode_directory: *NOBARCODE_DIRECTORY
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
         ingest_only_barcodes:
             - 98ab

@@ -69,8 +69,9 @@ class CollectorTester(Base):
         The test then waits a while for the scraping to be done, and verifies the outputs.
 
         These are in 3 barcodes.  The first matches the barcode in the database, so it gets scraped.
-        The second matches no barcode in the database, so it is moved to the nobarcode area and not added to the database.
-        The third barcode is not scraped because it is not configured in the ingest_only_barcodes list.
+        The second matches no barcode in the database, so it is ignored.
+        The third matches a barcode, but the visit is improperly formatted, so it is ignored.
+        The fourth barcode is not scraped because it is not configured in the ingest_only_barcodes list.
         """
 
         # Get the multiconf from the testing configuration yaml.
@@ -101,8 +102,6 @@ class CollectorTester(Base):
         self.__visit_plates_subdirectory = Path(
             multiconf_dict["visit_plates_subdirectory"]
         )
-        self.__nobarcode_directory = Path(multiconf_dict["nobarcode_directory"])
-        self.__novisit_directory = Path(multiconf_dict["novisit_directory"])
 
         scrapable_image_count = 288
 
@@ -184,7 +183,7 @@ class CollectorTester(Base):
                 stream.write("")
 
         # Make another scrapable directory with a different barcode.
-        # This one gets moved into nobarcode since it doesn't match any plate.
+        # This one gets ignored since it doesn't match any plate's barcode.
         plate_directory2 = (
             plates_directory / f"{nobarcode_barcode}_2023-04-06_RI1000-0276-3drop"
         )
@@ -196,7 +195,7 @@ class CollectorTester(Base):
                 stream.write("")
 
         # Make yet another scrapable directory with a different barcode.
-        # This one gets moved into novisit since it matches a plate with a bad visit name.
+        # This one gets ignored since it matches a plate with a bad visit name.
         plate_directory3 = (
             plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
         )
@@ -263,14 +262,14 @@ class CollectorTester(Base):
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
         assert count == scrapable_image_count, "first (scrapable) plate_directory"
 
-        # The second "nobarcode" plate directory should no longer exist.
+        # The second "nobarcode" plate directory should still exist.
         count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
-        assert count == 0, "second plate_directory"
+        assert count == nobarcode_image_count, "nobarcode plate_directory"
 
         # The third plate directory (novisit) is left intact.
         # We keep "novisit" plate directories for now, since Texrank still needs them.
         count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
-        assert count == novisit_image_count, "third plate_directory"
+        assert count == novisit_image_count, "novisit plate_directory"
 
         # The fourth plate directory is left intact.
         count = sum(1 for _ in plate_directory4.glob("*") if _.is_file())
@@ -287,28 +286,6 @@ class CollectorTester(Base):
         assert (
             count == scrapable_image_count
         ), f"ingested_directory images {str(rockingester_directory)}"
-
-        # We should have sent the second barcode to the nobarcode area.
-        count = sum(1 for _ in self.__nobarcode_directory.glob("*") if _.is_dir())
-        assert count == 1, f"nobarcode_directory {str(self.__nobarcode_directory)}"
-        count = sum(
-            1
-            for _ in (self.__nobarcode_directory / plate_directory2.name).glob("*")
-            if _.is_file()
-        )
-        assert (
-            count == nobarcode_image_count
-        ), f"nobarcode_directory images {str(self.__nobarcode_directory)}"
-
-        # We should NOT have sent the third (novisit) barcode to the novisit area.
-        count = sum(1 for _ in self.__novisit_directory.glob("*") if _.is_dir())
-        assert count == 0, f"novisit_directory {str(self.__novisit_directory)}"
-        count = sum(
-            1
-            for _ in (self.__novisit_directory / plate_directory3.name).glob("*")
-            if _.is_file()
-        )
-        assert count == 0, f"novisit_directory images {str(self.__novisit_directory)}"
 
     # ----------------------------------------------------------------------------------------
 
