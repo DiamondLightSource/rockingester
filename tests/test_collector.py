@@ -5,6 +5,11 @@ from pathlib import Path
 
 from dls_utilpack.visit import get_xchem_subdirectory
 
+# Types which the CrystalPlateObjects factory can use to build an instance.
+from xchembku_api.crystal_plate_objects.constants import (
+    ThingTypes as CrystalPlateObjectThingTypes,
+)
+
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
@@ -141,6 +146,7 @@ class CollectorTester(Base):
                 formulatrix__plate__id=10,
                 barcode="98ab",
                 visit=visit,
+                thing_type=CrystalPlateObjectThingTypes.SWISS3,
             )
         )
 

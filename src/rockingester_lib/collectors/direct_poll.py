@@ -21,6 +21,9 @@ from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 # Crystal well pydantic model.
 from xchembku_api.models.crystal_well_model import CrystalWellModel
 
+# Crystal plate objects factory.
+from xchembku_lib.crystal_plate_objects.crystal_plate_objects import CrystalPlateObjects
+
 # Base class for collector instances.
 from rockingester_lib.collectors.base import Base as CollectorBase
 
@@ -289,8 +292,13 @@ class DirectPoll(CollectorBase):
             entry.name for entry in os.scandir(plate_directory) if entry.is_file()
         ]
 
+        # Make an object corresponding to the crystal plate model's type.
+        crystal_plate_object = CrystalPlateObjects().build_object(
+            {"type": crystal_plate_model.thing_type}
+        )
+
         # Don't handle the plate directory until all images have arrived.
-        if len(well_names) < 288:
+        if len(well_names) < crystal_plate_object.get_well_count():
             return
 
         # Sort wells by name so that tests are deterministic.
