@@ -265,6 +265,8 @@ class DirectPoll(CollectorBase):
         Scrape a single directory looking for new files.
 
         Adds discovered files to internal list which gets pushed when it reaches a configurable size.
+
+        TODO: Consider some other flow where well images can be copied as they arrive instead of doing them all in a bunch.
         """
 
         # Name of the destination directory where we will permanently store ingested well image files.
@@ -298,6 +300,7 @@ class DirectPoll(CollectorBase):
         )
 
         # Don't handle the plate directory until all images have arrived.
+        # TODO: Put in some kind of failsafe in direct_poll.py to handle case where all the well images never arrive.
         if len(well_names) < crystal_plate_object.get_well_count():
             return
 
