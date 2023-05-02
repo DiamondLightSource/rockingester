@@ -141,10 +141,12 @@ class CollectorTester(Base):
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
         created_crystal_plate_models = []
+
+        scrabable_barcode = "98ab"
         created_crystal_plate_models.append(
             CrystalPlateModel(
                 formulatrix__plate__id=10,
-                barcode="98ab",
+                barcode=scrabable_barcode,
                 visit=visit,
                 thing_type=CrystalPlateObjectThingTypes.SWISS3,
             )
@@ -183,8 +185,8 @@ class CollectorTester(Base):
         # This one gets scraped as normal.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
         plate_directory1.mkdir(parents=True)
-        for i in range(10, 10 + scrapable_image_count):
-            filename = plate_directory1 / ("98ab_%03dA_1.jpg" % (i))
+        for i in range(scrapable_image_count):
+            filename = plate_directory1 / self.__subwell_filename(scrabable_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -195,8 +197,8 @@ class CollectorTester(Base):
         )
         plate_directory2.mkdir(parents=True)
         nobarcode_image_count = 3
-        for i in range(10, 10 + nobarcode_image_count):
-            filename = plate_directory2 / ("%s_%03dA_1.jpg" % (nobarcode_barcode, i))
+        for i in range(nobarcode_image_count):
+            filename = plate_directory2 / self.__subwell_filename(nobarcode_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -207,8 +209,8 @@ class CollectorTester(Base):
         )
         plate_directory3.mkdir(parents=True)
         novisit_image_count = 6
-        for i in range(10, 10 + novisit_image_count):
-            filename = plate_directory3 / ("%s_%03dA_1.jpg" % (novisit_barcode, i))
+        for i in range(novisit_image_count):
+            filename = plate_directory3 / self.__subwell_filename(novisit_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -219,8 +221,8 @@ class CollectorTester(Base):
         )
         plate_directory4.mkdir(parents=True)
         excluded_image_count = 2
-        for i in range(10, 10 + excluded_image_count):
-            filename = plate_directory4 / ("%s_%03dA_1.jpg" % (excluded_barcode, i))
+        for i in range(excluded_image_count):
+            filename = plate_directory4 / self.__subwell_filename(excluded_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -259,10 +261,8 @@ class CollectorTester(Base):
         ), "images after scraping"
 
         # Make sure the positions got recorded right in the wells.
-        i = 10
-        for crystal_well_model in crystal_well_models:
-            assert crystal_well_model.position == "%03dA1" % (i)
-            i += 1
+        assert crystal_well_models[0].position == "A01a"
+        assert crystal_well_models[-1].position == "H12d"
 
         # The first "scrapable" plate directory should still exist.
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
@@ -305,3 +305,21 @@ class CollectorTester(Base):
         records = await xchembku.fetch_crystal_wells_filenames()
 
         assert len(records) == scrapable_image_count, "images after restarting scraper"
+
+    # ----------------------------------------------------------------------------------------
+
+    def __subwell_filename(self, barcode, index):
+        """
+        Make a subwell image name which can be parsed by swiss3.
+        """
+
+        well_letters = "ABCDEFGH"
+
+        well = int(index / 3)
+        subwell = index % 3 + 1
+        row = well_letters[int(well / 12)]
+        col = "%02d" % (well % 12 + 1)
+
+        subwell_filename = f"{barcode}_{col}{row}_{subwell}"
+
+        return subwell_filename

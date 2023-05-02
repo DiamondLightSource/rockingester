@@ -11,6 +11,11 @@ from dls_utilpack.require import require
 from dls_utilpack.visit import VisitNotFound, get_xchem_directory
 from PIL import Image
 
+# Crystal plate object interface.
+from xchembku_api.crystal_plate_objects.interface import (
+    Interface as CrystalPlateInterface,
+)
+
 # Dataface client context.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
@@ -290,7 +295,7 @@ class DirectPoll(CollectorBase):
             )
 
         # Get all the well images in the plate directory.
-        well_names = [
+        subwell_names = [
             entry.name for entry in os.scandir(plate_directory) if entry.is_file()
         ]
 
@@ -301,19 +306,20 @@ class DirectPoll(CollectorBase):
 
         # Don't handle the plate directory until all images have arrived.
         # TODO: Put in some kind of failsafe in direct_poll.py to handle case where all the well images never arrive.
-        if len(well_names) < crystal_plate_object.get_well_count():
+        if len(subwell_names) < crystal_plate_object.get_well_count():
             return
 
         # Sort wells by name so that tests are deterministic.
-        well_names.sort()
+        subwell_names.sort()
 
         crystal_well_models: List[CrystalWellModel] = []
-        for well_name in well_names:
+        for subwell_name in subwell_names:
             # Make the well model, including image width/height.
             crystal_well_model = await self.ingest_well(
                 plate_directory,
-                well_name,
+                subwell_name,
                 crystal_plate_model,
+                crystal_plate_object,
                 target,
             )
 
@@ -331,7 +337,7 @@ class DirectPoll(CollectorBase):
         )
 
         logger.info(
-            f"copied {len(well_names)} well images from plate {plate_directory.name} to {target}"
+            f"copied {len(subwell_names)} well images from plate {plate_directory.name} to {target}"
         )
 
         # Remember we "handled" this one.
@@ -341,8 +347,9 @@ class DirectPoll(CollectorBase):
     async def ingest_well(
         self,
         plate_directory: Path,
-        well_name: str,
+        subwell_name: str,
         crystal_plate_model: CrystalPlateModel,
+        crystal_plate_object: CrystalPlateInterface,
         target: Path,
     ) -> CrystalWellModel:
         """
@@ -351,17 +358,12 @@ class DirectPoll(CollectorBase):
         Move the well image file to the ingested area.
         """
 
-        input_well_filename = plate_directory / well_name
-        ingested_well_filename = target / well_name
+        input_well_filename = plate_directory / subwell_name
+        ingested_well_filename = target / subwell_name
 
         # Stems are like "9acx_01A_1".
-        # TODO: Improve safety by ignoring wrongly formatted and non-jpg well filenames.
-        parts = Path(well_name).stem.split("_")
-        if len(parts) > 1:
-            # Strip off the leading 4-letter barcode and underscore.
-            position = "".join(parts[1:])
-        else:
-            position = parts[0]
+        # Convert the stem into a position as shown in soakdb3.
+        position = crystal_plate_object.normalize_subwell_name(subwell_name)
 
         error = None
         try:
