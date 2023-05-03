@@ -69,8 +69,6 @@ class Aiohttp(Thing, BaseAiohttp):
         except Exception as exception:
             logger.exception("exception in collector process", exc_info=exception)
 
-        logger.debug(f"[PIDAL] {callsign(self)} is returning from activate_process")
-
     # ----------------------------------------------------------------------------------------
     def activate_thread(self, loop) -> None:
         """
@@ -96,6 +94,9 @@ class Aiohttp(Thing, BaseAiohttp):
         """
 
         try:
+            # Turn off noisy debug from the PIL library.
+            logging.getLogger("PIL").setLevel("INFO")
+
             # Build a local collector for our back-end.
             self.__direct_collector = Collectors().build_object(
                 self.specification()["type_specific_tbd"][
@@ -103,15 +104,10 @@ class Aiohttp(Thing, BaseAiohttp):
                 ]
             )
 
-            logger.info("[COLSHUT] calling self.__direct_collector.activate()")
             # Get the local implementation started.
             await self.__direct_collector.activate()
 
-            # ----------------------------------------------
-            logger.info("[COLSHUT] calling BaseAiohttp.activate_coro_base(self)")
             await BaseAiohttp.activate_coro_base(self)
-
-            logger.info("[COLSHUT] returning")
 
         except Exception as exception:
             raise RuntimeError(

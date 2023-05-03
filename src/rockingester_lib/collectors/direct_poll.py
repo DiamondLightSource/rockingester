@@ -138,9 +138,7 @@ class DirectPoll(CollectorBase):
         self.__xchembku = None
 
         if self.__xchembku_client_context is not None:
-            logger.debug(f"[ECHDON] {callsign(self)} exiting __xchembku_client_context")
             await self.__xchembku_client_context.aexit()
-            logger.debug(f"[ECHDON] {callsign(self)} exited __xchembku_client_context")
             self.__xchembku_client_context = None
 
     # ----------------------------------------------------------------------------------------
@@ -213,13 +211,20 @@ class DirectPoll(CollectorBase):
             entry.name for entry in os.scandir(plates_directory) if entry.is_dir()
         ]
 
-        logger.info(
+        # Make sure we scrape the plate directories in barcode-order, which is the same as date order.
+        plate_names.sort()
+
+        logger.debug(
             f"[ROCKINGESTER POLL] found {len(plate_names)} plate directories in {plates_directory}"
         )
 
         for plate_name in plate_names:
             # We already handled this plate name?
             if plate_name in self.__handled_plate_names:
+                # logger.debug(
+                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
+                #     f" is already handled in this instance"
+                # )
                 continue
 
             # Get the plate's barcode from the directory name.
@@ -235,11 +240,14 @@ class DirectPoll(CollectorBase):
                 plate_barcode
             )
 
-            # This plate is not in the database?
+            # This plate directory's barcode is not in the database?
             if crystal_plate_model is None:
+                # logger.debug(
+                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode} is not in the database"
+                # )
                 continue
-
             try:
+                # Try to get the visit directory from the visit stored in the database's plate record.
                 visit_directory = Path(
                     get_xchem_directory(
                         self.__visits_directory, crystal_plate_model.visit
@@ -247,20 +255,28 @@ class DirectPoll(CollectorBase):
                 )
             # This is an improperly formatted visit name?
             except ValueError:
+                # logger.debug(
+                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
+                #     f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
+                # )
                 continue
             # This visit is not found on disk?
             except VisitNotFound:
+                # logger.debug(
+                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
+                #     f" is in the database, but cannot find visit directory in {self.__visits_directory}"
+                # )
                 continue
 
             # Scrape the directory when all image files have arrived.
-            await self.scrape_plate_directory_when_complete(
+            await self.scrape_plate_directory_if_complete(
                 plates_directory / plate_name,
                 crystal_plate_model,
                 visit_directory,
             )
 
     # ----------------------------------------------------------------------------------------
-    async def scrape_plate_directory_when_complete(
+    async def scrape_plate_directory_if_complete(
         self,
         plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
@@ -279,13 +295,17 @@ class DirectPoll(CollectorBase):
             visit_directory / self.__visit_plates_subdirectory / plate_directory.name
         )
 
-        # We have already put this plate directory into the visit directory and presumably also the database?
+        # We have already put this plate directory into the visit directory?
+        # This shouldn't really happen except when someone has been fiddling with the database.
+        # TODO: Have a way to rebuild rockingest after database wipe, but images have already been copied to the visit.
         if target.is_dir():
-            # Remember we "handled" this one.
-            self.__handled_plate_names.append(plate_directory.stem)
+            # Presumably this is done, so no error but log it.
+            # logger.debug(
+            #     f"[ROCKINGESTER POLL] plate_barcode {plate_directory.name} is apparently already copied to {target}"
+            # )
             return
 
-        # This is the first time we have scraped a directory for this plate?
+        # This is the first time we have scraped a directory for this plate record in the database?
         if crystal_plate_model.rockminer_collected_stem is None:
             # Update the path stem in the crystal plate record.
             # TODO: Consider if important to report/record same barcodes on different rockmaker directories.
@@ -327,6 +347,7 @@ class DirectPoll(CollectorBase):
             crystal_well_models.append(crystal_well_model)
 
         # Here we create or update the crystal well records into xchembku.
+        # TODO: Make sure that direct_poll does not double-create crystal well records if scrape is re-run with a different filename path.
         await self.__xchembku.upsert_crystal_wells(crystal_well_models)
 
         # Copy scraped directory to visit, replacing what might already be there.
@@ -363,7 +384,7 @@ class DirectPoll(CollectorBase):
 
         # Stems are like "9acx_01A_1".
         # Convert the stem into a position as shown in soakdb3.
-        position = crystal_plate_object.normalize_subwell_name(subwell_name)
+        position = crystal_plate_object.normalize_subwell_name(Path(subwell_name).stem)
 
         error = None
         try:
