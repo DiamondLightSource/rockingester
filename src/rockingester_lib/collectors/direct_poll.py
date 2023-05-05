@@ -242,9 +242,10 @@ class DirectPoll(CollectorBase):
 
             # This plate directory's barcode is not in the database?
             if crystal_plate_model is None:
-                # logger.debug(
-                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode} is not in the database"
-                # )
+                logger.debug(
+                    f"[ROCKDIR] plate_barcode {plate_barcode} is not in the database"
+                )
+                self.__handled_plate_names.append(plate_name)
                 continue
             try:
                 # Try to get the visit directory from the visit stored in the database's plate record.
@@ -255,17 +256,19 @@ class DirectPoll(CollectorBase):
                 )
             # This is an improperly formatted visit name?
             except ValueError:
-                # logger.debug(
-                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
-                #     f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
-                # )
+                logger.debug(
+                    f"[ROCKDIR] plate_barcode {plate_barcode}"
+                    f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
+                )
+                self.__handled_plate_names.append(plate_name)
                 continue
             # This visit is not found on disk?
             except VisitNotFound:
-                # logger.debug(
-                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
-                #     f" is in the database, but cannot find visit directory in {self.__visits_directory}"
-                # )
+                logger.debug(
+                    f"[ROCKDIR] plate_barcode {plate_barcode}"
+                    f" is in the database, but cannot find visit directory in {self.__visits_directory}"
+                )
+                self.__handled_plate_names.append(plate_name)
                 continue
 
             # Scrape the directory when all image files have arrived.
@@ -300,9 +303,10 @@ class DirectPoll(CollectorBase):
         # TODO: Have a way to rebuild rockingest after database wipe, but images have already been copied to the visit.
         if target.is_dir():
             # Presumably this is done, so no error but log it.
-            # logger.debug(
-            #     f"[ROCKINGESTER POLL] plate_barcode {plate_directory.name} is apparently already copied to {target}"
-            # )
+            logger.debug(
+                f"[ROCKDIR] plate_barcode {plate_directory.name} is apparently already copied to {target}"
+            )
+            self.__handled_plate_names.append(plate_directory.stem)
             return
 
         # This is the first time we have scraped a directory for this plate record in the database?
@@ -327,6 +331,9 @@ class DirectPoll(CollectorBase):
         # Don't handle the plate directory until all images have arrived.
         # TODO: Put in some kind of failsafe in direct_poll.py to handle case where all the well images never arrive.
         if len(subwell_names) < crystal_plate_object.get_well_count():
+            logger.debug(
+                f"[PLATEWAIT] found only {len(subwell_names)} out of {crystal_plate_object.get_well_count()} subwell images in {plate_directory}"
+            )
             return
 
         # Sort wells by name so that tests are deterministic.
