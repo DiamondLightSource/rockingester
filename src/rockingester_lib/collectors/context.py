@@ -75,13 +75,11 @@ class Context(ContextBase):
         if self.server is not None:
             if self.context_specification.get("start_as") == "process":
                 logger.info(
-                    "[NEWSHUT] in context exit, sending shutdown to client process"
+                    "[DISSHU] in context exit, sending shutdown to client process"
                 )
                 # Put in request to shutdown the server.
                 await self.server.client_shutdown()
-                logger.info(
-                    "[NEWSHUT] in context exit, sent shutdown to client process"
-                )
+                logger.info("[DISSHU] in context exit, sent shutdown to client process")
 
             if self.context_specification.get("start_as") == "coro":
                 await self.server.direct_shutdown()
