@@ -2,8 +2,9 @@ import asyncio
 import logging
 import os
 import shutil
+import time
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
@@ -70,6 +71,9 @@ class DirectPoll(CollectorBase):
 
         # Explicit list of barcodes to process (used when testing a deployment).
         self.__ingest_only_barcodes = type_specific_tbd.get("ingest_only_barcodes")
+
+        # Maximum time to wait for final image to arrive, relative to time of last arrived image.
+        self.__max_wait_seconds = require(s, type_specific_tbd, "max_wait_seconds")
 
         # Database where we will get plate barcodes and add new wells.
         self.__xchembku_client_context = None
@@ -318,10 +322,21 @@ class DirectPoll(CollectorBase):
                 [crystal_plate_model], "update rockminer_collected_stem"
             )
 
-        # Get all the well images in the plate directory.
-        subwell_names = [
-            entry.name for entry in os.scandir(plate_directory) if entry.is_file()
-        ]
+        # Get all the well images in the plate directory and the latest arrival time.
+        subwell_names = []
+        max_wait_seconds = self.__max_wait_seconds
+        max_mtime = os.stat(plate_directory).st_mtime
+
+        with os.scandir(plate_directory) as entries:
+            for entry in entries:
+                subwell_names.append(entry.name)
+                max_mtime = max(max_mtime, entry.stat().st_mtime)
+
+        # TODO: Verify that time.time() where rockingester runs matches os.stat() on filesystem from which images are collected.
+        waited_seconds = time.time() - max_mtime
+
+        # Sort wells by name so that tests are deterministic.
+        subwell_names.sort()
 
         # Make an object corresponding to the crystal plate model's type.
         crystal_plate_object = CrystalPlateObjects().build_object(
@@ -329,15 +344,29 @@ class DirectPoll(CollectorBase):
         )
 
         # Don't handle the plate directory until all images have arrived.
-        # TODO: Put in some kind of failsafe in direct_poll.py to handle case where all the well images never arrive.
         if len(subwell_names) < crystal_plate_object.get_well_count():
-            logger.debug(
-                f"[PLATEWAIT] found only {len(subwell_names)} out of {crystal_plate_object.get_well_count()} subwell images in {plate_directory}"
+            if waited_seconds < max_wait_seconds:
+                logger.debug(
+                    f"[PLATEWAIT] waiting longer since found only {len(subwell_names)}"
+                    f" out of {crystal_plate_object.get_well_count()} subwell images"
+                    f" in {plate_directory}"
+                    f" after waiting {'%0.1f' % waited_seconds} out of {max_wait_seconds} seconds"
+                )
+                return
+            else:
+                logger.warning(
+                    f"[PLATEDONE] done waiting even though found only {len(subwell_names)}"
+                    f" out of {crystal_plate_object.get_well_count()} subwell images"
+                    f" in {plate_directory}"
+                    f" after waiting {'%0.1f' % waited_seconds} out of {max_wait_seconds} seconds"
+                )
+        else:
+            logger.warning(
+                f"[PLATEDONE] done waiting since found all {len(subwell_names)}"
+                f" out of {crystal_plate_object.get_well_count()} subwell images"
+                f" in {plate_directory}"
+                f" after waiting {'%0.1f' % waited_seconds} out of {max_wait_seconds} seconds"
             )
-            return
-
-        # Sort wells by name so that tests are deterministic.
-        subwell_names.sort()
 
         crystal_well_models: List[CrystalWellModel] = []
         for subwell_name in subwell_names:

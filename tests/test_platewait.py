@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorDirectPoll:
+class TestPlatewaitDirectPoll:
     """
     Test collector interface by direct call.
     """
@@ -39,11 +39,11 @@ class TestCollectorDirectPoll:
         # Configuration file to use.
         configuration_file = "tests/configurations/direct_poll.yaml"
 
-        CollectorTester().main(constants, configuration_file, output_directory)
+        PlatewaitTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorService:
+class TestPlatewaitService:
     """
     Test collector interface through network interface.
     """
@@ -53,11 +53,11 @@ class TestCollectorService:
         # Configuration file to use.
         configuration_file = "tests/configurations/service.yaml"
 
-        CollectorTester().main(constants, configuration_file, output_directory)
+        PlatewaitTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class CollectorTester(Base):
+class PlatewaitTester(Base):
     """
     Test scraper collector's ability to automatically discover files and push them to xchembku.
     """
@@ -65,18 +65,7 @@ class CollectorTester(Base):
     # ----------------------------------------------------------------------------------------
     async def _main_coroutine(self, constants, output_directory):
         """
-        This tests the collector behavior.
-
-        First it starts the xchembku and collector and loads a single plate barcode into the database.
-
-        Then, while the collector thread is running, it creates some scrapable images.
-
-        The test then waits a while for the scraping to be done, and verifies the outputs.
-
-        These are 4 barcodes.  The first matches the barcode in the database, so it gets scraped.
-        The second matches no barcode in the database, so it is ignored.
-        The third matches a barcode, but the visit is improperly formatted, so it is ignored.
-        The fourth barcode is not scraped because it is not configured in the ingest_only_barcodes list.
+        This tests the collector behavior when the images are slow in coming.
         """
 
         # Get the multiconf from the testing configuration yaml.
@@ -108,7 +97,7 @@ class CollectorTester(Base):
             multiconf_dict["visit_plates_subdirectory"]
         )
 
-        scrapable_image_count = 288
+        scrapable_image_count = 4
 
         # Start the client context for the direct access to the xchembku.
         async with xchembku_client_context:
@@ -116,24 +105,13 @@ class CollectorTester(Base):
             async with collector_client_context:
                 # And the collector server context which starts the coro.
                 async with collector_server_context:
-                    await self.__run_part1(
-                        scrapable_image_count, constants, output_directory
-                    )
-
-                logger.debug(
-                    "------------ restarting collector server --------------------"
-                )
-
-                # Start the server again.
-                # This covers the case where collector starts by finding existing entries in the database and doesn't double-collect those on disk.
-                async with collector_server_context:
-                    await self.__run_part2(
+                    await self.__run_the_test(
                         scrapable_image_count, constants, output_directory
                     )
 
     # ----------------------------------------------------------------------------------------
 
-    async def __run_part1(self, scrapable_image_count, constants, output_directory):
+    async def __run_the_test(self, scrapable_image_count, constants, output_directory):
         """ """
         # Reference the xchembku object which the context has set up as the default.
         xchembku = xchembku_datafaces_get_default()
@@ -152,77 +130,21 @@ class CollectorTester(Base):
             )
         )
 
-        nobarcode_barcode = "98ac"
-
-        # Create a crystal plate model with a good barcode but bad visit.
-        novisit_barcode = "98ad"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=11,
-                barcode=novisit_barcode,
-                visit=("X" + visit),
-            )
-        )
-
-        excluded_barcode = "98ae"
-
         await xchembku.upsert_crystal_plates(created_crystal_plate_models)
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
         rockingester_directory = visit_directory / self.__visit_plates_subdirectory
 
-        # Get list of images before we create any of the scrape-able files.
-        crystal_well_models = await xchembku.fetch_crystal_wells_filenames()
-
-        assert (
-            len(crystal_well_models) == 0
-        ), "images before any new files are put in scrapable"
-
+        # Source directory which gets scraped for plates.
         plates_directory = Path(output_directory) / "SubwellImages"
 
-        # Make the scrapable directory with some files.
+        # Make the scrapable directory with some files, fewer than the total.
         # This one gets scraped as normal.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
         plate_directory1.mkdir(parents=True)
         for i in range(scrapable_image_count):
             filename = plate_directory1 / self.__subwell_filename(scrabable_barcode, i)
-            with open(filename, "w") as stream:
-                stream.write("")
-
-        # Make another scrapable directory with a different barcode.
-        # This one gets ignored since it doesn't match any plate's barcode.
-        plate_directory2 = (
-            plates_directory / f"{nobarcode_barcode}_2023-04-06_RI1000-0276-3drop"
-        )
-        plate_directory2.mkdir(parents=True)
-        nobarcode_image_count = 3
-        for i in range(nobarcode_image_count):
-            filename = plate_directory2 / self.__subwell_filename(nobarcode_barcode, i)
-            with open(filename, "w") as stream:
-                stream.write("")
-
-        # Make yet another scrapable directory with a different barcode.
-        # This one gets ignored since it matches a plate with a bad visit name.
-        plate_directory3 = (
-            plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
-        )
-        plate_directory3.mkdir(parents=True)
-        novisit_image_count = 6
-        for i in range(novisit_image_count):
-            filename = plate_directory3 / self.__subwell_filename(novisit_barcode, i)
-            with open(filename, "w") as stream:
-                stream.write("")
-
-        # Make yet another scrapable directory with a different barcode.
-        # This one gets completely ignored because it's not in the explicit list.
-        plate_directory4 = (
-            plates_directory / f"{excluded_barcode}_2023-04-06_RI1000-0276-3drop"
-        )
-        plate_directory4.mkdir(parents=True)
-        excluded_image_count = 2
-        for i in range(excluded_image_count):
-            filename = plate_directory4 / self.__subwell_filename(excluded_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 
@@ -245,9 +167,6 @@ class CollectorTester(Base):
                 )
             await asyncio.sleep(1.0)
 
-        # Wait a couple more seconds to make sure there are no extra images appearing.
-        await asyncio.sleep(2.0)
-
         # Make sure the crystal plate record got its collector stem recorded.
         crystal_plate_models = await xchembku.fetch_crystal_plates(
             CrystalPlateFilterModel()
@@ -262,24 +181,11 @@ class CollectorTester(Base):
 
         # Make sure the positions got recorded right in the wells.
         assert crystal_well_models[0].position == "A01a"
-        assert crystal_well_models[-1].position == "H12d"
+        assert crystal_well_models[-1].position == "A02a"
 
         # The first "scrapable" plate directory should still exist.
         count = sum(1 for _ in plate_directory1.glob("*") if _.is_file())
         assert count == scrapable_image_count, "first (scrapable) plate_directory"
-
-        # The second "nobarcode" plate directory should still exist.
-        count = sum(1 for _ in plate_directory2.glob("*") if _.is_file())
-        assert count == nobarcode_image_count, "nobarcode plate_directory"
-
-        # The third plate directory (novisit) is left intact.
-        # We keep "novisit" plate directories for now, since Texrank still needs them.
-        count = sum(1 for _ in plate_directory3.glob("*") if _.is_file())
-        assert count == novisit_image_count, "novisit plate_directory"
-
-        # The fourth plate directory is left intact.
-        count = sum(1 for _ in plate_directory4.glob("*") if _.is_file())
-        assert count == excluded_image_count, "fourth plate_directory"
 
         # We should have ingested the first barcode.
         count = sum(1 for _ in rockingester_directory.glob("*") if _.is_dir())
@@ -292,19 +198,6 @@ class CollectorTester(Base):
         assert (
             count == scrapable_image_count
         ), f"ingested_directory images {str(rockingester_directory)}"
-
-    # ----------------------------------------------------------------------------------------
-
-    async def __run_part2(self, scrapable_image_count, constants, output_directory):
-        """ """
-        # Reference the xchembku object which the context has set up as the default.
-        xchembku = xchembku_datafaces_get_default()
-
-        await asyncio.sleep(2.0)
-        # Get all images after servers start up and run briefly.
-        records = await xchembku.fetch_crystal_wells_filenames()
-
-        assert len(records) == scrapable_image_count, "images after restarting scraper"
 
     # ----------------------------------------------------------------------------------------
 

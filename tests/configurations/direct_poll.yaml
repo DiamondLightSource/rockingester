@@ -17,6 +17,7 @@ rockingester_collector_specification:
     type_specific_tbd:
         plates_directories:
             - "${output_directory}/SubwellImages"
+        max_wait_seconds: 3.0
         visits_directory: *VISITS_DIRECTORY
         visit_plates_subdirectory: *VISIT_PLATES_SUBDIRECTORY
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
