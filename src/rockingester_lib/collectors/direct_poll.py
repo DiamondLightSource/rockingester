@@ -4,7 +4,7 @@ import os
 import shutil
 import time
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
