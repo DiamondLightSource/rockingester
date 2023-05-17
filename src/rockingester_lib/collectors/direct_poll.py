@@ -335,15 +335,12 @@ class DirectPoll(CollectorBase):
         # TODO: Verify that time.time() where rockingester runs matches os.stat() on filesystem from which images are collected.
         waited_seconds = time.time() - max_mtime
 
-        # Sort wells by name so that tests are deterministic.
-        subwell_names.sort()
-
         # Make an object corresponding to the crystal plate model's type.
         crystal_plate_object = CrystalPlateObjects().build_object(
             {"type": crystal_plate_model.thing_type}
         )
 
-        # Don't handle the plate directory until all images have arrived.
+        # Don't handle the plate directory until all images have arrived or some maximum wait has exceeded.
         if len(subwell_names) < crystal_plate_object.get_well_count():
             if waited_seconds < max_wait_seconds:
                 logger.debug(
@@ -361,12 +358,15 @@ class DirectPoll(CollectorBase):
                     f" after waiting {'%0.1f' % waited_seconds} out of {max_wait_seconds} seconds"
                 )
         else:
-            logger.warning(
+            logger.debug(
                 f"[PLATEDONE] done waiting since found all {len(subwell_names)}"
                 f" out of {crystal_plate_object.get_well_count()} subwell images"
                 f" in {plate_directory}"
                 f" after waiting {'%0.1f' % waited_seconds} out of {max_wait_seconds} seconds"
             )
+
+        # Sort wells by name so that tests are deterministic.
+        subwell_names.sort()
 
         crystal_well_models: List[CrystalWellModel] = []
         for subwell_name in subwell_names:
