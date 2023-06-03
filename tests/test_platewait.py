@@ -15,6 +15,7 @@ from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientCont
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
 from xchembku_api.models.crystal_plate_model import CrystalPlateModel
+from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
 # Client context creator.
 from rockingester_api.collectors.context import Context as CollectorClientContext
@@ -79,7 +80,11 @@ class PlatewaitTester(Base):
             "xchembku_dataface_specification"
         ]
 
-        # Make the xchembku client context, expected to be direct (no server).
+        # Make the xchembku server context.
+        xchembku_server_context = XchembkuDatafaceServerContext(
+            xchembku_dataface_specification
+        )
+        # Make the xchembku client context.
         xchembku_client_context = XchembkuDatafaceClientContext(
             xchembku_dataface_specification
         )
@@ -99,15 +104,17 @@ class PlatewaitTester(Base):
 
         scrapable_image_count = 4
 
-        # Start the client context for the direct access to the xchembku.
+        # Start the client context for the remote access to the xchembku.
         async with xchembku_client_context:
-            # Start the collector client context.
-            async with collector_client_context:
-                # And the collector server context which starts the coro.
-                async with collector_server_context:
-                    await self.__run_the_test(
-                        scrapable_image_count, constants, output_directory
-                    )
+            # Start the server context xchembku which starts the process.
+            async with xchembku_server_context:
+                # Start the collector client context.
+                async with collector_client_context:
+                    # And the collector server context which starts the coro.
+                    async with collector_server_context:
+                        await self.__run_the_test(
+                            scrapable_image_count, constants, output_directory
+                        )
 
     # ----------------------------------------------------------------------------------------
 
@@ -131,6 +138,8 @@ class PlatewaitTester(Base):
         )
 
         await xchembku.upsert_crystal_plates(created_crystal_plate_models)
+        # Make sure the crystal plate is committed into the datbase before we start writing its images to disk.
+        await xchembku.commit()
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
@@ -139,8 +148,7 @@ class PlatewaitTester(Base):
         # Source directory which gets scraped for plates.
         plates_directory = Path(output_directory) / "SubwellImages"
 
-        # Make the scrapable directory with some files, fewer than the total.
-        # This one gets scraped as normal.
+        # Make the scrapable directory with some files, fewer than the total for the plate type.
         plate_directory1 = plates_directory / "98ab_2023-04-06_RI1000-0276-3drop"
         plate_directory1.mkdir(parents=True)
         for i in range(scrapable_image_count):

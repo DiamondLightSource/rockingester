@@ -15,18 +15,37 @@ logging_settings:
 
 # The external access bits.
 external_access_bits:
-    dataface_port: &ROCKINGESTER_PORT 27821
-
-# The xchembku_dataface direct access.
-xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
-    type: "xchembku_lib.xchembku_datafaces.direct"
-    database:
-        type: "xchembku_lib.xchembku_databases.normsql"
-        filename: "${output_directory}/xchembku.sqlite"
-        log_level: "WARNING"
+    xchembku_dataface_server: &XCHEMBKU_DATAFACE_SERVER http://*:27821
+    xchembku_dataface_client: &XCHEMBKU_DATAFACE_CLIENT http://localhost:27821
+    rockingester_server: &ROCKINGESTER_SERVER http://*:27822
+    rockingester_client: &ROCKINGESTER_CLIENT http://localhost:27822
 
 visits_directory: &VISITS_DIRECTORY "${output_directory}/visits"
 visit_plates_subdirectory: &VISIT_PLATES_SUBDIRECTORY "processing/rockingester"
+
+# -----------------------------------------------------------------------------
+# The xchembku_dataface direct access.
+xchembku_dataface_specification_direct: &XCHEMBKU_DATAFACE_SPECIFICATION_DIRECT
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "dls_normsql.aiosqlite"
+        filename: "${output_directory}/xchembku_dataface.sqlite"
+        log_level: "WARNING"
+
+# The xchembku_dataface client/server composite.
+xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
+    type: "xchembku_lib.xchembku_datafaces.aiohttp"
+    type_specific_tbd:
+        # The remote xchembku_dataface server access.
+        aiohttp_specification:
+            server: *XCHEMBKU_DATAFACE_SERVER
+            client: *XCHEMBKU_DATAFACE_CLIENT
+        # The local implementation of the xchembku_dataface.
+        actual_xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION_DIRECT
+    context:
+        start_as: process
+
+# -----------------------------------------------------------------------------
 
 # The rockingester direct access.
 rockingester_collector_specification_direct_poll:
@@ -50,9 +69,8 @@ rockingester_collector_specification:
     type_specific_tbd:
         # The remote rockingester server access.
         aiohttp_specification:
-            server_host: "*"
-            client_host: "127.0.0.1"
-            port: *ROCKINGESTER_PORT
+            server: *ROCKINGESTER_SERVER
+            client: *ROCKINGESTER_CLIENT
         # The local implementation of the rockingester.
         direct_collector_specification: *ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
     context:

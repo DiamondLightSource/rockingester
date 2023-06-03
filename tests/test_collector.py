@@ -15,6 +15,7 @@ from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientCont
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
 from xchembku_api.models.crystal_plate_model import CrystalPlateModel
+from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
 # Client context creator.
 from rockingester_api.collectors.context import Context as CollectorClientContext
@@ -90,7 +91,11 @@ class CollectorTester(Base):
             "xchembku_dataface_specification"
         ]
 
-        # Make the xchembku client context, expected to be direct (no server).
+        # Make the xchembku server context.
+        xchembku_server_context = XchembkuDatafaceServerContext(
+            xchembku_dataface_specification
+        )
+        # Make the xchembku client context.
         xchembku_client_context = XchembkuDatafaceClientContext(
             xchembku_dataface_specification
         )
@@ -110,26 +115,27 @@ class CollectorTester(Base):
 
         scrapable_image_count = 288
 
-        # Start the client context for the direct access to the xchembku.
+        # Start the client context for the remote access to the xchembku.
         async with xchembku_client_context:
-            # Start the collector client context.
-            async with collector_client_context:
-                # And the collector server context which starts the coro.
-                async with collector_server_context:
-                    await self.__run_part1(
-                        scrapable_image_count, constants, output_directory
+            # Start the server context xchembku which starts the process.
+            async with xchembku_server_context:
+                async with collector_client_context:
+                    # And the collector server context which starts the coro.
+                    async with collector_server_context:
+                        await self.__run_part1(
+                            scrapable_image_count, constants, output_directory
+                        )
+
+                    logger.debug(
+                        "------------ restarting collector server --------------------"
                     )
 
-                logger.debug(
-                    "------------ restarting collector server --------------------"
-                )
-
-                # Start the server again.
-                # This covers the case where collector starts by finding existing entries in the database and doesn't double-collect those on disk.
-                async with collector_server_context:
-                    await self.__run_part2(
-                        scrapable_image_count, constants, output_directory
-                    )
+                    # Start the server again.
+                    # This covers the case where collector starts by finding existing entries in the database and doesn't double-collect those on disk.
+                    async with collector_server_context:
+                        await self.__run_part2(
+                            scrapable_image_count, constants, output_directory
+                        )
 
     # ----------------------------------------------------------------------------------------
 
