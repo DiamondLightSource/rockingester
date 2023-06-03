@@ -1,18 +1,18 @@
 import logging
 
+# Base class.
+from dls_utilpack.client_context_base import ClientContextBase
+
 # Things created in the context.
 from rockingester_api.collectors.collectors import (
     Collectors,
     rockingester_collectors_set_default,
 )
 
-# Base class.
-from rockingester_api.context_base import ContextBase
-
 logger = logging.getLogger(__name__)
 
 
-class Context(ContextBase):
+class Context(ClientContextBase):
     """
     Client context for a rockingester_collector object.
     On entering, it creates the object according to the specification (a dict).
@@ -23,14 +23,14 @@ class Context(ContextBase):
 
     # ----------------------------------------------------------------------------------------
     def __init__(self, specification):
-        self.__specification = specification
+        ClientContextBase.__init__(self, specification)
 
     # ----------------------------------------------------------------------------------------
     async def aenter(self):
         """ """
 
         # Build the object according to the specification.
-        self.interface = Collectors().build_object(self.__specification)
+        self.interface = Collectors().build_object(self.specification)
 
         # If there is more than one collector, the last one defined will be the default.
         rockingester_collectors_set_default(self.interface)

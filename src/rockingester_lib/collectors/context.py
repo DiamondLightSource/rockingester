@@ -1,11 +1,11 @@
 import logging
 from typing import Dict
 
+# Base class for an asyncio server context.
+from dls_utilpack.server_context_base import ServerContextBase
+
 # Things created in the context.
 from rockingester_lib.collectors.collectors import Collectors, collectors_set_default
-
-# Base class for an asyncio context.
-from rockingester_lib.contexts.base import Base as ContextBase
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 thing_type = "rockingester_lib.collectors.context"
 
 
-class Context(ContextBase):
+class Context(ServerContextBase):
     """
     Asyncio context for a collector object.
     On entering, it creates the object according to the specification (a dict).
@@ -32,7 +32,7 @@ class Context(ContextBase):
                 The only key in the specification that relates to the context is "start_as", which can be "coro", "thread", "process" or None.
                 All other keys in the specification relate to creating the collector object.
         """
-        ContextBase.__init__(self, thing_type, specification)
+        ServerContextBase.__init__(self, thing_type, specification)
 
     # ----------------------------------------------------------------------------------------
     async def aenter(self) -> None:
@@ -46,9 +46,6 @@ class Context(ContextBase):
 
         # Build the object according to the specification.
         self.server = Collectors().build_object(self.specification())
-
-        # If there is more than one collector, the last one defined will be the default.
-        collectors_set_default(self.server)
 
         if self.context_specification.get("start_as") == "coro":
             await self.server.activate_coro()
@@ -65,7 +62,7 @@ class Context(ContextBase):
             await self.server.activate()
 
     # ----------------------------------------------------------------------------------------
-    async def aexit(self) -> None:
+    async def aexit(self, type, value, traceback) -> None:
         """
         Asyncio context exit.
 
