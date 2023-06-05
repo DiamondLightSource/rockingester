@@ -6,11 +6,19 @@ import time
 from pathlib import Path
 from typing import Dict, List
 
+import pytds
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
-from dls_utilpack.visit import VisitNotFound, get_xchem_directory
+from dls_utilpack.visit import (
+    VisitNotFound,
+    get_xchem_directory,
+    get_xchem_subdirectory,
+)
 from PIL import Image
+
+# Crystal plate constants.
+from xchembku_api.crystal_plate_objects.constants import TREENODE_NAMES_TO_THING_TYPES
 
 # Crystal plate object interface.
 from xchembku_api.crystal_plate_objects.interface import (
@@ -190,6 +198,61 @@ class DirectPoll(CollectorBase):
             self.__latest_formulatrix__plate__id = plate_model.formulatrix__plate__id
 
     # ----------------------------------------------------------------------------------------
+    async def fetch_crystal_plate_model_for_barcode(
+        self,
+        plate_name: str,
+        plate_barcode: str,
+    ) -> CrystalPlateModel:
+        """
+        Fetch the crystal_plate_model for plate with the given barcode.
+        """
+
+        # See if we have this barcode in the xchembku database already.
+        crystal_plate_models = await self.__xchembku.fetch_crystal_plates(
+            CrystalPlateFilterModel(barcode=plate_barcode),
+            why="[ROCKINGESTER POLL]",
+        )
+
+        if len(crystal_plate_models) > 0:
+            return crystal_plate_models[0]
+
+        # Use ftrixminer to try to get that barcode from the Formulatrix database.
+        crystal_plate_model = await self.query_formulatrix(plate_barcode)
+
+        # This barcode is not in the database?
+        if crystal_plate_model is None:
+            logger.debug(
+                f"[ROCKDIR] plate_barcode {plate_barcode} is not in the database"
+            )
+            self.__handled_plate_names.append(plate_name)
+            return None
+
+        try:
+            # Try to get the visit directory from the visit stored in the database's plate record.
+            visit_directory = Path(
+                get_xchem_directory(
+                    self.__visits_directory,
+                    crystal_plate_model.visit,
+                )
+            )
+        # This is an improperly formatted visit name?
+        except ValueError:
+            logger.debug(
+                f"[ROCKDIR] plate_barcode {plate_barcode}"
+                f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
+            )
+            self.__handled_plate_names.append(plate_name)
+            return None
+        # This visit is not found on disk?
+        except VisitNotFound:
+            logger.debug(
+                f"[ROCKDIR] plate_barcode {plate_barcode}"
+                f" is in the database, but cannot find visit directory in {self.__visits_directory}"
+            )
+            self.__handled_plate_names.append(plate_name)
+            return None
+
+    # ----------------------------------------------------------------------------------------
     async def scrape(self) -> None:
         """
         Scrape all the configured directories looking for new files.
@@ -223,61 +286,47 @@ class DirectPoll(CollectorBase):
         )
 
         for plate_name in plate_names:
-            # We already handled this plate name?
-            if plate_name in self.__handled_plate_names:
-                # logger.debug(
-                #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
-                #     f" is already handled in this instance"
-                # )
-                continue
+            await self.scrape_plate_directory(plates_directory / plate_name)
 
-            # Get the plate's barcode from the directory name.
-            plate_barcode = plate_name[0:4]
+    # ----------------------------------------------------------------------------------------
+    async def scrape_plate_directory(
+        self,
+        plate_directory: Path,
+    ) -> None:
+        """
+        Scrape a single directory looking for subdirectories which correspond to plates.
+        """
 
-            # We have a specific list we want to process?
-            if self.__ingest_only_barcodes is not None:
-                if plate_barcode not in self.__ingest_only_barcodes:
-                    continue
+        plate_name = plate_directory.name
 
-            # Get the matching plate record from the database.
-            crystal_plate_model = self.__crystal_plate_models_by_barcode.get(
-                plate_barcode
-            )
+        # We already handled this plate name?
+        if plate_name in self.__handled_plate_names:
+            # logger.debug(
+            #     f"[ROCKINGESTER POLL] plate_barcode {plate_barcode}"
+            #     f" is already handled in this instance"
+            # )
+            return
 
-            # This plate directory's barcode is not in the database?
-            if crystal_plate_model is None:
-                logger.debug(
-                    f"[ROCKDIR] plate_barcode {plate_barcode} is not in the database"
-                )
-                self.__handled_plate_names.append(plate_name)
-                continue
-            try:
-                # Try to get the visit directory from the visit stored in the database's plate record.
-                visit_directory = Path(
-                    get_xchem_directory(
-                        self.__visits_directory, crystal_plate_model.visit
-                    )
-                )
-            # This is an improperly formatted visit name?
-            except ValueError:
-                logger.debug(
-                    f"[ROCKDIR] plate_barcode {plate_barcode}"
-                    f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
-                )
-                self.__handled_plate_names.append(plate_name)
-                continue
-            # This visit is not found on disk?
-            except VisitNotFound:
-                logger.debug(
-                    f"[ROCKDIR] plate_barcode {plate_barcode}"
-                    f" is in the database, but cannot find visit directory in {self.__visits_directory}"
-                )
-                self.__handled_plate_names.append(plate_name)
-                continue
+        # Get the plate's barcode from the directory name.
+        plate_barcode = plate_name[0:4]
+
+        # We have a specific list we want to process?
+        if self.__ingest_only_barcodes is not None:
+            if plate_barcode not in self.__ingest_only_barcodes:
+                return
+
+        # Get the matching plate record from the xchembku or formulatrix database.
+        crystal_plate_model = await self.fetch_crystal_plate_model_for_barcode(
+            plate_name,
+            plate_barcode,
+        )
+
+        if crystal_plate_model.visit is not None:
+            visit_directory = get_xchem_subdirectory(crystal_plate_model.visit)
 
             # Scrape the directory when all image files have arrived.
             await self.scrape_plate_directory_if_complete(
-                plates_directory / plate_name,
+                plate_directory,
                 crystal_plate_model,
                 visit_directory,
             )
@@ -441,6 +490,156 @@ class DirectPoll(CollectorBase):
         )
 
         return crystal_well_model
+
+    # ----------------------------------------------------------------------------------------
+    async def close_client_session(self):
+        """"""
+
+        pass
+
+    # ----------------------------------------------------------------------------------------
+    async def query_formulatrix(self, barcode: str) -> CrystalPlateModel:
+        """
+        Query formulatrix for plates with given barcodes.
+        """
+
+        # Query mssql or dummy.
+        rows = await self.query(barcode)
+
+        if len(rows) == 0:
+            # Wrap a model around the attributes.
+            crystal_plate_model = CrystalPlateModel(
+                barcode=str(row[1]),
+                error="barcode not found in formulatrix database",
+            )
+
+        else:
+            # Loop over the rows we got back from the query.
+            for row in rows:
+                formulatrix__plate__id = int(row[0])
+                thing_type = TREENODE_NAMES_TO_THING_TYPES.get(row[3])
+                if thing_type is None:
+                    raise RuntimeError(
+                        f"programming error: plate type {row[3]} unexpected"
+                    )
+
+                # Get a proper visit name from the formulatrix's "experiment" tree_node name.
+                # The techs name the experiment tree node like sw30864-12_something,
+                # and the visit is parsed out as the part before the first underscore.
+                formulatrix__experiment__name = str(row[2])
+                visit = None
+                error = None
+                try:
+                    xchem_subdirectory = get_xchem_subdirectory(
+                        formulatrix__experiment__name
+                    )
+                    # The xchem_subdirectory comes out like sw30864/sw30864-12.
+                    # We only store the actual visit into the database field.
+                    visit = Path(xchem_subdirectory).name
+
+                except Exception as exception:
+                    error = str(exception)
+
+                # Wrap a model around the attributes.
+                crystal_plate_model = CrystalPlateModel(
+                    visit=visit,
+                    barcode=str(row[1]),
+                    thing_type=thing_type,
+                    formulatrix__experiment__name=formulatrix__experiment__name,
+                    formulatrix__plate__id=formulatrix__plate__id,
+                    error=error,
+                )
+
+            # Add plate to our database.
+            # I don't worry about performance hit of adding plates one by one with upsert
+            # since new plates don't get added very often.
+            await self.__xchembku.upsert_crystal_plates([crystal_plate_model])
+
+    # ----------------------------------------------------------------------------------------
+    async def query(self, barcode: str) -> List[List]:
+        """
+        Read dummy data from configuration.
+        """
+
+        server = self.__mssql["server"]
+
+        if server == "dummy":
+            return await self.query_dummy(barcode)
+        else:
+            return await self.query_mssql(barcode)
+
+    # ----------------------------------------------------------------------------------------
+    async def query_mssql(self, barcode: str) -> List[List]:
+        """
+        Scrape discover new plates in the Formulatrix database.
+        """
+
+        # Connect to the RockMaker database at every query.
+        # TODO: Use pytds connection pooling.
+        # TODO: Handle failure to connect to RockMaker database.
+        connection = pytds.connect(
+            self.__mssql["server"],
+            self.__mssql["database"],
+            self.__mssql["username"],
+            self.__mssql["password"],
+        )
+
+        # Select only plate types we care about.
+        treenode_names = [
+            f"'{str(name)}'" for name in list(TREENODE_NAMES_TO_THING_TYPES.keys())
+        ]
+
+        # Plate's treenode is "ExperimentPlate".
+        # Parent of ExperimentPlate is "Experiment", aka visit
+        # Parent of Experiment is "Project", aka plate type.
+        # Parent of Project is "ProjectsFolder", we only care about "XChem"
+        # Get all xchem barcodes and the associated experiment name.
+        sql = (
+            "SELECT"
+            "\n  Plate.ID AS id,"
+            "\n  Plate.Barcode AS barcode,"
+            "\n  experiment_node.Name AS experiment,"
+            "\n  plate_type_node.Name AS plate_type"
+            "\nFROM Plate"
+            "\nJOIN Experiment ON experiment.ID = plate.experimentID"
+            "\nJOIN TreeNode AS experiment_node ON experiment_node.ID = Experiment.TreeNodeID"
+            "\nJOIN TreeNode AS plate_type_node ON plate_type_node.ID = experiment_node.ParentID"
+            "\nJOIN TreeNode AS projects_folder_node ON projects_folder_node.ID = plate_type_node.ParentID"
+            f"\nWHERE Plate.Barcode = '{barcode}'"
+            "\n  AND projects_folder_node.Name = 'xchem'"
+            f"\n  AND plate_type_node.Name IN ({',' .join(treenode_names)})"
+            f"\n  AND Plate.ID NOT IN ({', '.join(self.__latest_formulatrix__plate__ids)})"
+        )
+
+        cursor = connection.cursor()
+        cursor.execute(sql)
+        rows = cursor.fetchall()
+
+        if self.__query_count % 60 == 0:
+            logger.debug(
+                f"[FTRIXMINER POLL] query #{self.__query_count}. got {len(rows)} rows from\n{sql}"
+            )
+
+        self.__query_count += 1
+
+        return rows
+
+    # ----------------------------------------------------------------------------------------
+    async def query_dummy(self, barcodes: List[str]) -> List[List]:
+        """
+        Read dummy data from configuration.
+        """
+
+        database = self.__mssql["database"]
+        records = self.__mssql[database]
+
+        # Keep only records that haven't been queried before.
+        new_records = []
+        for record in records:
+            if record[0] not in self.__latest_formulatrix__plate__ids:
+                new_records.append(record)
+
+        return new_records
 
     # ----------------------------------------------------------------------------------------
     async def close_client_session(self):
