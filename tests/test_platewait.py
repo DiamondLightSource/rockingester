@@ -125,21 +125,8 @@ class PlatewaitTester(Base):
 
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
-        created_crystal_plate_models = []
 
         scrabable_barcode = "98ab"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=10,
-                barcode=scrabable_barcode,
-                visit=visit,
-                thing_type=CrystalPlateObjectThingTypes.SWISS3,
-            )
-        )
-
-        await xchembku.upsert_crystal_plates(created_crystal_plate_models)
-        # Make sure the crystal plate is committed into the datbase before we start writing its images to disk.
-        await xchembku.commit()
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)

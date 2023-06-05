@@ -146,33 +146,11 @@ class CollectorTester(Base):
 
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
-        # created_crystal_plate_models = []
 
         scrabable_barcode = "98ab"
-        # created_crystal_plate_models.append(
-        #     CrystalPlateModel(
-        #         formulatrix__plate__id=10,
-        #         barcode=scrabable_barcode,
-        #         visit=visit,
-        #         thing_type=CrystalPlateObjectThingTypes.SWISS3,
-        #     )
-        # )
-
         nobarcode_barcode = "98ac"
-
-        # Create a crystal plate model with a good barcode but bad visit.
         badvisit_barcode = "98ad"
-        # created_crystal_plate_models.append(
-        #     CrystalPlateModel(
-        #         formulatrix__plate__id=11,
-        #         barcode=novisit_barcode,
-        #         visit=("X" + visit),
-        #     )
-        # )
-
         excluded_barcode = "98ae"
-
-        # await xchembku.upsert_crystal_plates(created_crystal_plate_models)
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
