@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestPlatewaitDirectPoll:
+class TestPlatewaitDirectMysql:
     """
     Test collector interface by direct call.
     """
@@ -38,13 +38,13 @@ class TestPlatewaitDirectPoll:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/direct_poll.yaml"
+        configuration_file = "tests/configurations/direct_sqlite.yaml"
 
         PlatewaitTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class TestPlatewaitService:
+class TestPlatewaitServiceSqlite:
     """
     Test collector interface through network interface.
     """
@@ -52,7 +52,21 @@ class TestPlatewaitService:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/service.yaml"
+        configuration_file = "tests/configurations/service_sqlite.yaml"
+
+        PlatewaitTester().main(constants, configuration_file, output_directory)
+
+
+# ----------------------------------------------------------------------------------------
+class TestPlatewaitServiceMysql:
+    """
+    Test collector interface through network interface.
+    """
+
+    def test(self, constants, logging_setup, output_directory):
+
+        # Configuration file to use.
+        configuration_file = "tests/configurations/service_mysql.yaml"
 
         PlatewaitTester().main(constants, configuration_file, output_directory)
 

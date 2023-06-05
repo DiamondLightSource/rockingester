@@ -39,7 +39,7 @@ class TestFtrixClient:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/direct_poll.yaml"
+        configuration_file = "tests/configurations/direct_sqlite.yaml"
 
         FtrixClientTester().main(constants, configuration_file, output_directory)
 
