@@ -281,13 +281,15 @@ class DirectPoll(CollectorBase):
         )
 
         if crystal_plate_model.error is None:
-            visit_subdirectory = get_xchem_subdirectory(crystal_plate_model.visit)
+            visit_directory = get_xchem_directory(
+                self.__visits_directory, crystal_plate_model.visit
+            )
 
             # Scrape the directory when all image files have arrived.
             await self.scrape_plate_directory_if_complete(
                 plate_directory,
                 crystal_plate_model,
-                visit_subdirectory,
+                visit_directory,
             )
         else:
             # Remember we "handled" this one.
@@ -298,7 +300,7 @@ class DirectPoll(CollectorBase):
         self,
         plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
-        visit_subdirectory: Path,
+        visit_directory: Path,
     ) -> None:
         """
         Scrape a single directory looking for new files.
@@ -310,7 +312,7 @@ class DirectPoll(CollectorBase):
 
         # Name of the destination directory where we will permanently store ingested well image files.
         target = (
-            visit_subdirectory / self.__visit_plates_subdirectory / plate_directory.name
+            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
         )
 
         # We have already put this plate directory into the visit directory?
