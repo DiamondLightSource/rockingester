@@ -40,8 +40,14 @@ class PlateInjector:
         # Start a model object to be injected and returned.
         crystal_plate_model = CrystalPlateModel(barcode=barcode)
 
-        # Look up the barcode in the Formulatrix database.
-        record = await self.__ftrix_client.query_barcode(barcode)
+        try:
+            # TODO: Consider a better ftrix_client connection management than making a new one each query.
+            await self.__ftrix_client.connect()
+            # Look up the barcode in the Formulatrix database.
+            record = await self.__ftrix_client.query_barcode(barcode)
+        finally:
+            await self.__ftrix_client.disconnect()
+
         if record is None:
             crystal_plate_model.error = "barcode not found Formulatrix database"
 

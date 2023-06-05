@@ -41,6 +41,12 @@ from xchembku_lib.crystal_plate_objects.crystal_plate_objects import CrystalPlat
 # Base class for collector instances.
 from rockingester_lib.collectors.base import Base as CollectorBase
 
+# Object able to talk to the formulatrix database.
+from rockingester_lib.ftrix_client import FtrixClient
+
+# Object which can inject new xchembku plate records discovered while looking in subwell images.
+from rockingester_lib.plate_injector import PlateInjector
+
 logger = logging.getLogger(__name__)
 
 thing_type = "rockingester_lib.collectors.direct_poll"
@@ -77,6 +83,11 @@ class DirectPoll(CollectorBase):
             require(s, type_specific_tbd, "visit_plates_subdirectory")
         )
 
+        # Reference the dict entry for the ftrix client specification.
+        self.__ftrix_client_specification = require(
+            s, type_specific_tbd, "ftrix_client_specification"
+        )
+
         # Explicit list of barcodes to process (used when testing a deployment).
         self.__ingest_only_barcodes = type_specific_tbd.get("ingest_only_barcodes")
 
@@ -87,15 +98,12 @@ class DirectPoll(CollectorBase):
         self.__xchembku_client_context = None
         self.__xchembku = None
 
+        # Object able to talk to the formulatrix database.
+        self.__ftrix_client = None
+
         # This flag will stop the ticking async task.
         self.__keep_ticking = True
         self.__tick_future = None
-
-        # This is the last formulatrix plate we have ingested, used to avoid re-handling the same plate.
-        self.__latest_formulatrix__plate__id = 0
-
-        # This is the list of plates indexed by their barcode.
-        self.__crystal_plate_models_by_barcode: Dict[CrystalPlateModel] = {}
 
         # The plate names which we have already finished handling within the current instance.
         self.__handled_plate_names = []
@@ -127,6 +135,16 @@ class DirectPoll(CollectorBase):
         # Get a reference to the xchembku interface provided by the context.
         self.__xchembku = self.__xchembku_client_context.get_interface()
 
+        # Object able to talk to the formulatrix database.
+        self.__ftrix_client = FtrixClient(
+            self.__ftrix_client_specification,
+        )
+
+        # Object which can inject new xchembku plate records discovered while looking in subwell images.
+        self.__plate_injector = PlateInjector(
+            self.__ftrix_client,
+            self.__xchembku,
+        )
         # Poll periodically.
         self.__tick_future = asyncio.get_event_loop().create_task(self.tick())
 
@@ -164,103 +182,29 @@ class DirectPoll(CollectorBase):
         """
 
         while self.__keep_ticking:
-            try:
-                # Fetch all the plates we don't have yet.
-                await self.fetch_plates_by_barcode()
-
-                # Scrape all the configured plates directories.
-                await self.scrape()
-            except Exception as exception:
-                logger.error(explain2(exception, "scraping"), exc_info=exception)
+            # Scrape all the configured plates directories.
+            await self.scrape_plates_directories()
 
             # TODO: Make periodic tick period to be configurable.
             await asyncio.sleep(1.0)
 
     # ----------------------------------------------------------------------------------------
-    async def fetch_plates_by_barcode(self) -> None:
-        """
-        Fetch all barcodes in the database which we don't have in memory yet.
-        """
-
-        # Fetch all the plates we don't have yet.
-        plate_models = await self.__xchembku.fetch_crystal_plates(
-            CrystalPlateFilterModel(
-                from_formulatrix__plate__id=self.__latest_formulatrix__plate__id
-            ),
-            why="[ROCKINGESTER POLL]",
-        )
-
-        # Add the plates to the list, assumed sorted by formulatrix__plate__id.
-        for plate_model in plate_models:
-            self.__crystal_plate_models_by_barcode[plate_model.barcode] = plate_model
-
-            # Remember the highest one we got to shorten the query for next time.
-            self.__latest_formulatrix__plate__id = plate_model.formulatrix__plate__id
-
-    # ----------------------------------------------------------------------------------------
-    async def fetch_crystal_plate_model_for_barcode(
-        self,
-        plate_name: str,
-        plate_barcode: str,
-    ) -> CrystalPlateModel:
-        """
-        Fetch the crystal_plate_model for plate with the given barcode.
-        """
-
-        # See if we have this barcode in the xchembku database already.
-        crystal_plate_models = await self.__xchembku.fetch_crystal_plates(
-            CrystalPlateFilterModel(barcode=plate_barcode),
-            why="[ROCKINGESTER POLL]",
-        )
-
-        if len(crystal_plate_models) > 0:
-            return crystal_plate_models[0]
-
-        # Use ftrixminer to try to get that barcode from the Formulatrix database.
-        crystal_plate_model = await self.query_formulatrix(plate_barcode)
-
-        # This barcode is not in the database?
-        if crystal_plate_model is None:
-            logger.debug(
-                f"[ROCKDIR] plate_barcode {plate_barcode} is not in the database"
-            )
-            self.__handled_plate_names.append(plate_name)
-            return None
-
-        try:
-            # Try to get the visit directory from the visit stored in the database's plate record.
-            visit_directory = Path(
-                get_xchem_directory(
-                    self.__visits_directory,
-                    crystal_plate_model.visit,
-                )
-            )
-        # This is an improperly formatted visit name?
-        except ValueError:
-            logger.debug(
-                f"[ROCKDIR] plate_barcode {plate_barcode}"
-                f" is in the database, but visit {crystal_plate_model.visit} is improperly formed"
-            )
-            self.__handled_plate_names.append(plate_name)
-            return None
-        # This visit is not found on disk?
-        except VisitNotFound:
-            logger.debug(
-                f"[ROCKDIR] plate_barcode {plate_barcode}"
-                f" is in the database, but cannot find visit directory in {self.__visits_directory}"
-            )
-            self.__handled_plate_names.append(plate_name)
-            return None
-
-    # ----------------------------------------------------------------------------------------
-    async def scrape(self) -> None:
+    async def scrape_plates_directories(self) -> None:
         """
         Scrape all the configured directories looking for new files.
         """
 
-        # TODO: Use asyncio tasks to parellize scraping plates directories.
+        # TODO: Use asyncio tasks to paralellize scraping plates directories.
         for directory in self.__plates_directories:
-            await self.scrape_plates_directory(Path(directory))
+            try:
+                await self.scrape_plates_directory(Path(directory))
+            except Exception as exception:
+                # Just log the error, tag as anomaly for reporting, don't die.
+                logger.error(
+                    "[ANOMALY] "
+                    + explain2(exception, f"scraping plates directory {directory}"),
+                    exc_info=exception,
+                )
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plates_directory(
@@ -286,7 +230,18 @@ class DirectPoll(CollectorBase):
         )
 
         for plate_name in plate_names:
-            await self.scrape_plate_directory(plates_directory / plate_name)
+            try:
+                await self.scrape_plate_directory(plates_directory / plate_name)
+            except Exception as exception:
+                # Just log the error, tag as anomaly for reporting, don't die.
+                logger.error(
+                    "[ANOMALY] "
+                    + explain2(
+                        exception,
+                        f"scraping plate directory {str(plates_directory / plate_name)}",
+                    ),
+                    exc_info=exception,
+                )
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plate_directory(
@@ -316,27 +271,34 @@ class DirectPoll(CollectorBase):
                 return
 
         # Get the matching plate record from the xchembku or formulatrix database.
-        crystal_plate_model = await self.fetch_crystal_plate_model_for_barcode(
-            plate_name,
+        crystal_plate_model = await self.__plate_injector.find_or_inject_barcode(
             plate_barcode,
+            self.__visits_directory,
         )
 
-        if crystal_plate_model.visit is not None:
-            visit_directory = get_xchem_subdirectory(crystal_plate_model.visit)
+        logger.debug(
+            f"[CRYERR] for plate_barcode {plate_barcode} crystal_plate_model.error is {crystal_plate_model.error}"
+        )
+
+        if crystal_plate_model.error is None:
+            visit_subdirectory = get_xchem_subdirectory(crystal_plate_model.visit)
 
             # Scrape the directory when all image files have arrived.
             await self.scrape_plate_directory_if_complete(
                 plate_directory,
                 crystal_plate_model,
-                visit_directory,
+                visit_subdirectory,
             )
+        else:
+            # Remember we "handled" this one.
+            self.__handled_plate_names.append(plate_name)
 
     # ----------------------------------------------------------------------------------------
     async def scrape_plate_directory_if_complete(
         self,
         plate_directory: Path,
         crystal_plate_model: CrystalPlateModel,
-        visit_directory: Path,
+        visit_subdirectory: Path,
     ) -> None:
         """
         Scrape a single directory looking for new files.
@@ -348,7 +310,7 @@ class DirectPoll(CollectorBase):
 
         # Name of the destination directory where we will permanently store ingested well image files.
         target = (
-            visit_directory / self.__visit_plates_subdirectory / plate_directory.name
+            visit_subdirectory / self.__visit_plates_subdirectory / plate_directory.name
         )
 
         # We have already put this plate directory into the visit directory?
@@ -490,156 +452,6 @@ class DirectPoll(CollectorBase):
         )
 
         return crystal_well_model
-
-    # ----------------------------------------------------------------------------------------
-    async def close_client_session(self):
-        """"""
-
-        pass
-
-    # ----------------------------------------------------------------------------------------
-    async def query_formulatrix(self, barcode: str) -> CrystalPlateModel:
-        """
-        Query formulatrix for plates with given barcodes.
-        """
-
-        # Query mssql or dummy.
-        rows = await self.query(barcode)
-
-        if len(rows) == 0:
-            # Wrap a model around the attributes.
-            crystal_plate_model = CrystalPlateModel(
-                barcode=str(row[1]),
-                error="barcode not found in formulatrix database",
-            )
-
-        else:
-            # Loop over the rows we got back from the query.
-            for row in rows:
-                formulatrix__plate__id = int(row[0])
-                thing_type = TREENODE_NAMES_TO_THING_TYPES.get(row[3])
-                if thing_type is None:
-                    raise RuntimeError(
-                        f"programming error: plate type {row[3]} unexpected"
-                    )
-
-                # Get a proper visit name from the formulatrix's "experiment" tree_node name.
-                # The techs name the experiment tree node like sw30864-12_something,
-                # and the visit is parsed out as the part before the first underscore.
-                formulatrix__experiment__name = str(row[2])
-                visit = None
-                error = None
-                try:
-                    xchem_subdirectory = get_xchem_subdirectory(
-                        formulatrix__experiment__name
-                    )
-                    # The xchem_subdirectory comes out like sw30864/sw30864-12.
-                    # We only store the actual visit into the database field.
-                    visit = Path(xchem_subdirectory).name
-
-                except Exception as exception:
-                    error = str(exception)
-
-                # Wrap a model around the attributes.
-                crystal_plate_model = CrystalPlateModel(
-                    visit=visit,
-                    barcode=str(row[1]),
-                    thing_type=thing_type,
-                    formulatrix__experiment__name=formulatrix__experiment__name,
-                    formulatrix__plate__id=formulatrix__plate__id,
-                    error=error,
-                )
-
-            # Add plate to our database.
-            # I don't worry about performance hit of adding plates one by one with upsert
-            # since new plates don't get added very often.
-            await self.__xchembku.upsert_crystal_plates([crystal_plate_model])
-
-    # ----------------------------------------------------------------------------------------
-    async def query(self, barcode: str) -> List[List]:
-        """
-        Read dummy data from configuration.
-        """
-
-        server = self.__mssql["server"]
-
-        if server == "dummy":
-            return await self.query_dummy(barcode)
-        else:
-            return await self.query_mssql(barcode)
-
-    # ----------------------------------------------------------------------------------------
-    async def query_mssql(self, barcode: str) -> List[List]:
-        """
-        Scrape discover new plates in the Formulatrix database.
-        """
-
-        # Connect to the RockMaker database at every query.
-        # TODO: Use pytds connection pooling.
-        # TODO: Handle failure to connect to RockMaker database.
-        connection = pytds.connect(
-            self.__mssql["server"],
-            self.__mssql["database"],
-            self.__mssql["username"],
-            self.__mssql["password"],
-        )
-
-        # Select only plate types we care about.
-        treenode_names = [
-            f"'{str(name)}'" for name in list(TREENODE_NAMES_TO_THING_TYPES.keys())
-        ]
-
-        # Plate's treenode is "ExperimentPlate".
-        # Parent of ExperimentPlate is "Experiment", aka visit
-        # Parent of Experiment is "Project", aka plate type.
-        # Parent of Project is "ProjectsFolder", we only care about "XChem"
-        # Get all xchem barcodes and the associated experiment name.
-        sql = (
-            "SELECT"
-            "\n  Plate.ID AS id,"
-            "\n  Plate.Barcode AS barcode,"
-            "\n  experiment_node.Name AS experiment,"
-            "\n  plate_type_node.Name AS plate_type"
-            "\nFROM Plate"
-            "\nJOIN Experiment ON experiment.ID = plate.experimentID"
-            "\nJOIN TreeNode AS experiment_node ON experiment_node.ID = Experiment.TreeNodeID"
-            "\nJOIN TreeNode AS plate_type_node ON plate_type_node.ID = experiment_node.ParentID"
-            "\nJOIN TreeNode AS projects_folder_node ON projects_folder_node.ID = plate_type_node.ParentID"
-            f"\nWHERE Plate.Barcode = '{barcode}'"
-            "\n  AND projects_folder_node.Name = 'xchem'"
-            f"\n  AND plate_type_node.Name IN ({',' .join(treenode_names)})"
-            f"\n  AND Plate.ID NOT IN ({', '.join(self.__latest_formulatrix__plate__ids)})"
-        )
-
-        cursor = connection.cursor()
-        cursor.execute(sql)
-        rows = cursor.fetchall()
-
-        if self.__query_count % 60 == 0:
-            logger.debug(
-                f"[FTRIXMINER POLL] query #{self.__query_count}. got {len(rows)} rows from\n{sql}"
-            )
-
-        self.__query_count += 1
-
-        return rows
-
-    # ----------------------------------------------------------------------------------------
-    async def query_dummy(self, barcodes: List[str]) -> List[List]:
-        """
-        Read dummy data from configuration.
-        """
-
-        database = self.__mssql["database"]
-        records = self.__mssql[database]
-
-        # Keep only records that haven't been queried before.
-        new_records = []
-        for record in records:
-            if record[0] not in self.__latest_formulatrix__plate__ids:
-                new_records.append(record)
-
-        return new_records
 
     # ----------------------------------------------------------------------------------------
     async def close_client_session(self):

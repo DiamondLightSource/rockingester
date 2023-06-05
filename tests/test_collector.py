@@ -146,33 +146,33 @@ class CollectorTester(Base):
 
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
-        created_crystal_plate_models = []
+        # created_crystal_plate_models = []
 
         scrabable_barcode = "98ab"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=10,
-                barcode=scrabable_barcode,
-                visit=visit,
-                thing_type=CrystalPlateObjectThingTypes.SWISS3,
-            )
-        )
+        # created_crystal_plate_models.append(
+        #     CrystalPlateModel(
+        #         formulatrix__plate__id=10,
+        #         barcode=scrabable_barcode,
+        #         visit=visit,
+        #         thing_type=CrystalPlateObjectThingTypes.SWISS3,
+        #     )
+        # )
 
         nobarcode_barcode = "98ac"
 
         # Create a crystal plate model with a good barcode but bad visit.
-        novisit_barcode = "98ad"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=11,
-                barcode=novisit_barcode,
-                visit=("X" + visit),
-            )
-        )
+        badvisit_barcode = "98ad"
+        # created_crystal_plate_models.append(
+        #     CrystalPlateModel(
+        #         formulatrix__plate__id=11,
+        #         barcode=novisit_barcode,
+        #         visit=("X" + visit),
+        #     )
+        # )
 
         excluded_barcode = "98ae"
 
-        await xchembku.upsert_crystal_plates(created_crystal_plate_models)
+        # await xchembku.upsert_crystal_plates(created_crystal_plate_models)
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
@@ -211,12 +211,12 @@ class CollectorTester(Base):
         # Make yet another scrapable directory with a different barcode.
         # This one gets ignored since it matches a plate with a bad visit name.
         plate_directory3 = (
-            plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
+            plates_directory / f"{badvisit_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory3.mkdir(parents=True)
         novisit_image_count = 6
         for i in range(novisit_image_count):
-            filename = plate_directory3 / self.__subwell_filename(novisit_barcode, i)
+            filename = plate_directory3 / self.__subwell_filename(badvisit_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 

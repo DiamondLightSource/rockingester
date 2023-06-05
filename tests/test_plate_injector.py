@@ -17,12 +17,10 @@ from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterMod
 from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
-# Client context creator.
-from rockingester_api.collectors.context import Context as CollectorClientContext
-
-# Server context creator.
-from rockingester_lib.collectors.context import Context as CollectorServerContext
+# Object able to talk to the formulatrix database.
 from rockingester_lib.ftrix_client import FtrixClientContext
+
+# Object which can inject new xchembku plate records discovered while looking in subwell images.
 from rockingester_lib.plate_injector import PlateInjector
 
 # Base class for the tester.
