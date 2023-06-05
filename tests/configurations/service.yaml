@@ -24,6 +24,32 @@ visits_directory: &VISITS_DIRECTORY "${output_directory}/visits"
 visit_plates_subdirectory: &VISIT_PLATES_SUBDIRECTORY "processing/rockingester"
 
 # -----------------------------------------------------------------------------
+ftrix_client_specification: &FTRIX_CLIENT_SPECIFICATION
+    mssql:
+        server: dummy
+        database: records1
+        username: na
+        password: na
+        records1:
+            - - 10
+              - 98ab
+              - cm00001-1_scrapable
+              - SWISSci_3Drop
+            - - 11
+              - 98ad
+              - cm00001-badvisit_barcode
+              - SWISSci_3drop
+        records_for_plate_injector:
+            - - 1
+              - 98ab
+              - cm00001-1_something#else
+              - SWISSci_3Drop
+            - - 2
+              - 98ax
+              - cm00001_bad_visit_format
+              - SWISSci_3drop
+
+# -----------------------------------------------------------------------------
 # The xchembku_dataface direct access.
 xchembku_dataface_specification_direct: &XCHEMBKU_DATAFACE_SPECIFICATION_DIRECT
     type: "xchembku_lib.xchembku_datafaces.direct"
@@ -58,6 +84,7 @@ rockingester_collector_specification_direct_poll:
         visits_directory: *VISITS_DIRECTORY
         visit_plates_subdirectory: *VISIT_PLATES_SUBDIRECTORY
         xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
+        ftrix_client_specification: *FTRIX_CLIENT_SPECIFICATION
         ingest_only_barcodes:
             - 98ab
             - 98ac
