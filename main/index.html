@@ -9,7 +9,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>rockingester &#8212; rockingester 2.2.4.dev3+g2c8cb43 documentation</title>
+    <title>rockingester &#8212; rockingester 3.0.2 documentation</title>
   
   
   
@@ -50,7 +50,7 @@
     <link rel="icon" href="_static/dls-favicon.ico"/>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="User Guide" href="user/index.html" />
+    <link rel="next" title="Tutorials" href="tutorials/index.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   </head>
@@ -141,8 +141,29 @@
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
-                      <a class="nav-link nav-internal" href="user/index.html">
-                        User Guide
+                      <a class="nav-link nav-internal" href="tutorials/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="how-to/index.html">
+                        How-to Guides
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="explanations/index.html">
+                        Explanations
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference/index.html">
+                        Reference
                       </a>
                     </li>
                 
@@ -210,10 +231,6 @@ document.write(`
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
-      <span class="fa-solid fa-outdent"></span>
-    </label>
-  
 </div>
 
     </nav>
@@ -240,8 +257,29 @@ document.write(`
   <ul class="bd-navbar-elements navbar-nav">
     
                     <li class="nav-item">
-                      <a class="nav-link nav-internal" href="user/index.html">
-                        User Guide
+                      <a class="nav-link nav-internal" href="tutorials/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="how-to/index.html">
+                        How-to Guides
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="explanations/index.html">
+                        Explanations
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="reference/index.html">
+                        Reference
                       </a>
                     </li>
                 
@@ -310,91 +348,35 @@ document.write(`
                   
   <section id="rockingester">
 <h1>rockingester<a class="headerlink" href="#rockingester" title="Permalink to this heading">#</a></h1>
-<p>XChem Business Knowledge Unit.  Service, Client, API, persistent store.</p>
-<section id="installation">
-<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="n">rockingester</span>
-
-<span class="n">rockingester</span> <span class="o">--</span><span class="n">version</span>
-</pre></div>
-</div>
-</section>
-<section id="legacy-information">
-<h2>Legacy information<a class="headerlink" href="#legacy-information" title="Permalink to this heading">#</a></h2>
-<p>The formulatrix pipeline code is here:</p>
-<blockquote>
-<div><p>/dls/science/groups/i04-1/software/luigi_pipeline/imager_pipe</p>
-</div></blockquote>
-<p>This is a working directory of</p>
-<blockquote>
-<div><p><a class="github reference external" href="https://github.com/xchem/formulatrix_pipe">xchem/formulatrix_pipe</a></p>
-</div></blockquote>
-<p>The formulatrix pipeline puts images here:</p>
-<blockquote>
-<div><p>/dls/science/groups/i04-1/software/luigi_pipeline/imager_pipe/SubwellImages/9b5j_2023-03-23_RI1000-0276-3drop</p>
-</div></blockquote>
-<p>Does this have anything useful?</p>
-<blockquote>
-<div><p><a class="reference external" href="https://gitlab.diamond.ac.uk/cnp64921/dlsformulatrix.uploader/-/blob/master/formulatrix_uploader.py">https://gitlab.diamond.ac.uk/cnp64921/dlsformulatrix.uploader/-/blob/master/formulatrix_uploader.py</a></p>
-</div></blockquote>
-<p>As for the luigi stuff, one of the scripts in the /dls/science/groups/i04-1/software/luigi_pipeline/imager_pipe/ creates the filename after extracting info from the SQL server on the Formulatrix. I think the 9b5j part is the barcode, yes, but you might have to dig into the scripts there to find out the logic behind it all.</p>
-<p>By the way if you want to access the FOrmulatrix /Rockmaker from Windows you can brose to access the RockMaker Imager \cs04r-nas01-02rockimager</p>
-<p>You see like:
-\cs04r-nas01-02rockimagerrockimagerRockMakerStorageWellImages539plateID_14539batchID_72673</p>
-<p>The batch ID proably relates to the inspection… a plate is inspected multiple times and each inspection has a batch ID.
-There may be some clues in the get_barcodes.py script in the imager_pipe directory.</p>
-</section>
-<section id="algorithm">
-<h2>Algorithm<a class="headerlink" href="#algorithm" title="Permalink to this heading">#</a></h2>
-<p>Looks in SubwellImages directory.</p>
-<p>Uses first 4 letters of each subdirectory as “barcode”.</p>
-<p>If barcode is NOT in the plates mined from the formulatrix, then it is ignored.</p>
-<p>Otherrwise, if name of plate is a valid visit name, and the visit directory exists, then copies the images to the visit directory and inserts them into the database.</p>
-<p>Otherwise ignores the subdirectory.</p>
-<p>We have to leave all plate directories in SubwellImages since this is where Texrank expects them.</p>
-<p>After we don’t need Texrank, then we can move the non-visit directories into something like SubwellImages_novisit, and move (instead of copy) them for good visits.  This will keep SubwellImages clean and more efficient to poll.</p>
-</section>
-<section id="documentation">
-<h2>Documentation<a class="headerlink" href="#documentation" title="Permalink to this heading">#</a></h2>
-<p>See <a class="reference external" href="https://www.cs.diamond.ac.uk/rockingester">https://www.cs.diamond.ac.uk/rockingester</a> for more detailed documentation.</p>
-<p>Building and viewing the documents locally:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>git clone git+https://gitlab.diamond.ac.uk/scisoft/bxflow/rockingester.git
-cd rockingester
-virtualenv /scratch/$USER/venv/rockingester
-source /scratch/$USER/venv/rockingester/bin/activate
-pip install -e .[dev]
-make -f .rockingester/Makefile validate_docs
-browse to file:///scratch/$USER/venvs/rockingester/build/html/index.html
-</pre></div>
-</div>
-<p>Topics for further documentation:</p>
-<ul class="simple">
-<li><p>TODO list of improvements</p></li>
-<li><p>change log</p></li>
-</ul>
-</section>
-<section id="source-repository">
-<h2>Source repository<a class="headerlink" href="#source-repository" title="Permalink to this heading">#</a></h2>
-<p><a class="github reference external" href="https://github.com/diamondlightsource/rockingester/rockingester">diamondlightsource/rockingester</a></p>
-</section>
-<section id="id1">
-<h2>Documentation<a class="headerlink" href="#id1" title="Permalink to this heading">#</a></h2>
-<div class="sd-container-fluid sd-sphinx-override sd-mb-4 docutils">
-<div class="sd-row sd-row-cols-2 sd-row-cols-xs-2 sd-row-cols-sm-2 sd-row-cols-md-2 sd-row-cols-lg-2 docutils">
-<div class="sd-col sd-d-flex-row docutils">
-<div class="sd-card sd-sphinx-override sd-w-100 sd-shadow-sm sd-card-hover docutils">
-<div class="sd-card-body docutils">
-<div class="sd-card-title sd-font-weight-bold docutils">
-<svg version="4.0.0.63c5cb3" width="4.0em" height="4.0em" class="sd-material-icon sd-material-icon-person" viewBox="0 0 24 24" aria-hidden="true"><path d="M0 0h24v24H0z" fill="none"></path><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path></svg></div>
-<p class="sd-card-text">The User Guide contains documentation on how to install and use the software.</p>
-</div>
-<a class="sd-stretched-link reference internal" href="user/index.html"><span class="doc"></span></a></div>
-</div>
-</div>
-</div>
+<p>Service to discover incoming images from the Formulatrix Rockmaker and ingest them into the database.</p>
 <div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tutorials/index.html">Tutorials</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tutorials/tbd.html">TBD Tutorial</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="how-to/index.html">How-to Guides</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="how-to/installing.html">Installing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/developing.html">Developing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/testing.html">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/documenting.html">Documenting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="how-to/devops.html">Devops</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="explanations/index.html">Explanations</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="explanations/docs_structure.html">About the documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanations/conventions.html">Naming conventions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="explanations/todo.html">TODO</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="reference/index.html">Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="reference/command_line.html">Command Line</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/classes.html">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reference/modules.html">Functions</a></li>
+</ul>
+</li>
+</ul>
 </div>
-</section>
 </section>
 
 
@@ -409,11 +391,11 @@ browse to file:///scratch/$USER/venvs/rockingester/build/html/index.html
     <div class="footer-article-item"><!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="right-next"
-       href="user/index.html"
+       href="tutorials/index.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">User Guide</p>
+        <p class="prev-next-title">Tutorials</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -426,25 +408,6 @@ browse to file:///scratch/$USER/venvs/rockingester/build/html/index.html
             </div>
             
             
-              
-                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
-
-  <div class="sidebar-secondary-item">
-  <div class="page-toc tocsection onthispage">
-    <i class="fa-solid fa-list"></i> On this page
-  </div>
-  <nav class="bd-toc-nav page-toc">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installation">Installation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#legacy-information">Legacy information</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#algorithm">Algorithm</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#documentation">Documentation</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#source-repository">Source repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#id1">Documentation</a></li>
-</ul>
-  </nav></div>
-
-</div></div>
               
             
           </div>
