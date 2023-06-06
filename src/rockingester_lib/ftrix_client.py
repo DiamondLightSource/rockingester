@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 
 import pytds
 from dls_utilpack.callsign import callsign
