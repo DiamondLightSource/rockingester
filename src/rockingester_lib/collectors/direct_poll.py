@@ -4,21 +4,13 @@ import os
 import shutil
 import time
 from pathlib import Path
-from typing import Dict, List
+from typing import List
 
-import pytds
 from dls_utilpack.callsign import callsign
 from dls_utilpack.explain import explain2
 from dls_utilpack.require import require
-from dls_utilpack.visit import (
-    VisitNotFound,
-    get_xchem_directory,
-    get_xchem_subdirectory,
-)
+from dls_utilpack.visit import get_xchem_directory
 from PIL import Image
-
-# Crystal plate constants.
-from xchembku_api.crystal_plate_objects.constants import TREENODE_NAMES_TO_THING_TYPES
 
 # Crystal plate object interface.
 from xchembku_api.crystal_plate_objects.interface import (
@@ -27,7 +19,6 @@ from xchembku_api.crystal_plate_objects.interface import (
 
 # Dataface client context.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
-from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
 
 # Crystal plate pydantic model.
 from xchembku_api.models.crystal_plate_model import CrystalPlateModel
@@ -58,6 +49,7 @@ class DirectPoll(CollectorBase):
     Object representing an image collector.
     The behavior is to start a coro task to waken every few seconds and scan for newly created plate directories.
     Image files are pushed to xchembku.
+    Plates for the image files are also pushed to xchembku the first time they are wanted.
     """
 
     # ----------------------------------------------------------------------------------------
@@ -249,7 +241,7 @@ class DirectPoll(CollectorBase):
         plate_directory: Path,
     ) -> None:
         """
-        Scrape a single directory looking for subdirectories which correspond to plates.
+        Scrape a single directory looking for images.
         """
 
         plate_name = plate_directory.name

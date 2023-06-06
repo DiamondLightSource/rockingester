@@ -1,5 +1,5 @@
 # ********** Please don't edit this file!
-# ********** It has been generated automatically by dae_devops version 0.5.2.
+# ********** It has been generated automatically by dae_devops version 0.5.3.
 # ********** For repository_name rockingester
 
 from pathlib import Path
@@ -188,7 +188,7 @@ ultimate_replacements = {
     "$" + "{repository_name}": "rockingester",
     "$" + "{package_name}": "rockingester_lib",
     "$" + "{git_url}": "https://github.com/diamondlightsource/rockingester",
-    "$" + "{python_version_at_least}": "3.9",
+    "$" + "{python_version_at_least}": "3.10",
 }
 
 
@@ -197,4 +197,4 @@ def setup(app):
     app.connect("source-read", ultimateReplace)
 
 
-# dae_devops_fingerprint 57cc2679e3536b62d41d3a5952bd47f3
+# dae_devops_fingerprint 828dd6a7f193b8dea97813cc6760f44e

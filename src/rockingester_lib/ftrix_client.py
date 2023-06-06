@@ -21,9 +21,9 @@ class FtrixClient:
         pass
 
     # ----------------------------------------------------------------------------------------
-    async def query_barcode(self, barcode: str) -> Optional[List]:
+    async def query_barcode(self, barcode: str) -> Optional[Dict]:
         """
-        Read query for barcode.
+        Query the formulatrix database for te plate record with the given barcode.
         """
 
         server = self.__mssql["server"]
@@ -34,9 +34,9 @@ class FtrixClient:
             return await self.query_barcode_mssql(barcode)
 
     # ----------------------------------------------------------------------------------------
-    async def query_barcode_mssql(self, barcode: str) -> Optional[List]:
+    async def query_barcode_mssql(self, barcode: str) -> Optional[Dict]:
         """
-        Scrape discover new plates in the Formulatrix database.
+        Query the MSSQL formulatrix database for te plate record with the given barcode.
         """
 
         # Connect to the RockMaker database at every tick.
@@ -91,9 +91,9 @@ class FtrixClient:
             return record
 
     # ----------------------------------------------------------------------------------------
-    async def query_barcode_dummy(self, barcode: str) -> Optional[List]:
+    async def query_barcode_dummy(self, barcode: str) -> Optional[Dict]:
         """
-        Read dummy data from configuration.
+        Query the dummy database for te plate record with the given barcode.
         """
 
         database = self.__mssql["database"]

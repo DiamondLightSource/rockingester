@@ -2,7 +2,7 @@
 primary:
     repository_name: rockingester
     package_name: rockingester_lib
-    one_line_description: "XChem Business Knowledge Unit. Service, Client, API, persistent store."
+    one_line_description: "Service to discover incoming images from the Formulatrix Rockmaker and ingest them into the database."
     author:
         name: David Erb
         email: david.erb@diamond.ac.uk
@@ -19,3 +19,5 @@ primary:
               - dls_mainiac
               - dls_multiconf
               - dls_utilpack
+              # PyTDS is a Python library that provides interface to connect to Microsoft SQL Server databases
+              - python-tds

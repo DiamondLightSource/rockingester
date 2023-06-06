@@ -1,27 +1,5 @@
-import asyncio
 import logging
-import time
-from pathlib import Path
 
-from dls_utilpack.visit import get_xchem_subdirectory
-
-# Types which the CrystalPlateObjects factory can use to build an instance.
-from xchembku_api.crystal_plate_objects.constants import (
-    ThingTypes as CrystalPlateObjectThingTypes,
-)
-
-# Things xchembku provides.
-from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
-from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
-from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
-from xchembku_api.models.crystal_plate_model import CrystalPlateModel
-from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
-
-# Client context creator.
-from rockingester_api.collectors.context import Context as CollectorClientContext
-
-# Server context creator.
-from rockingester_lib.collectors.context import Context as CollectorServerContext
 from rockingester_lib.ftrix_client import FtrixClientContext
 
 # Base class for the tester.
@@ -74,7 +52,7 @@ class FtrixClientTester(Base):
         """ """
 
         record = await ftrix_client.query_barcode("98ab")
-        assert record["formulatrix__experiment__name"] == "cm00001-1_something#else"
+        assert record["formulatrix__experiment__name"] == "cm00001-1_scrapable"
 
         record = await ftrix_client.query_barcode("zz00")
         assert record is None

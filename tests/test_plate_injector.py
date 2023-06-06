@@ -50,24 +50,13 @@ class TestPlateInjectorServiceMysql:
 # ----------------------------------------------------------------------------------------
 class PlateInjectorTester(Base):
     """
-    Test scraper collector's ability to automatically discover files and push them to xchembku.
+    Test scraper collector's ability to automatically discover plates and push them to xchembku.
     """
 
     # ----------------------------------------------------------------------------------------
     async def _main_coroutine(self, constants, output_directory):
         """
-        This tests the collector behavior.
-
-        First it starts the xchembku and collector and loads a single plate barcode into the database.
-
-        Then, while the collector thread is running, it creates some scrapable images.
-
-        The test then waits a while for the scraping to be done, and verifies the outputs.
-
-        These are 4 barcodes.  The first matches the barcode in the database, so it gets scraped.
-        The second matches no barcode in the database, so it is ignored.
-        The third matches a barcode, but the visit is improperly formatted, so it is ignored.
-        The fourth barcode is not scraped because it is not configured in the ingest_only_barcodes list.
+        This tests the plate injection behavior.
         """
 
         # Get the multiconf from the testing configuration yaml.

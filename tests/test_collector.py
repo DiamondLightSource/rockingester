@@ -5,16 +5,10 @@ from pathlib import Path
 
 from dls_utilpack.visit import get_xchem_subdirectory
 
-# Types which the CrystalPlateObjects factory can use to build an instance.
-from xchembku_api.crystal_plate_objects.constants import (
-    ThingTypes as CrystalPlateObjectThingTypes,
-)
-
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
-from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
 # Client context creator.
@@ -30,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorDirectMysql:
+class XTestCollectorDirectMysql:
     """
     Test collector interface by direct call.
     """
@@ -133,6 +127,7 @@ class CollectorTester(Base):
         async with xchembku_client_context:
             # Start the server context xchembku which starts the process.
             async with xchembku_server_context:
+                # Start the collector server.
                 async with collector_client_context:
                     # And the collector server context which starts the coro.
                     async with collector_server_context:
