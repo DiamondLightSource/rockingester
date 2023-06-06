@@ -1,0 +1,104 @@
+type: dls_multiconf.classic
+
+logging_settings:
+    console:
+        enabled: True
+        verbose: True
+    logfile:
+        enabled: True
+        directory: ${output_directory}/logfile.log
+    graypy:
+        enabled: False
+        host: 172.23.7.128
+        port: 12201
+        protocol: UDP
+
+# The external access bits.
+external_access_bits:
+    xchembku_dataface_server: &XCHEMBKU_DATAFACE_SERVER http://*:27821
+    xchembku_dataface_client: &XCHEMBKU_DATAFACE_CLIENT http://localhost:27821
+    rockingester_server: &ROCKINGESTER_SERVER http://*:27822
+    rockingester_client: &ROCKINGESTER_CLIENT http://localhost:27822
+
+visits_directory: &VISITS_DIRECTORY "${output_directory}/visits"
+visit_plates_subdirectory: &VISIT_PLATES_SUBDIRECTORY "processing/rockingester"
+
+# -----------------------------------------------------------------------------
+ftrix_client_specification: &FTRIX_CLIENT_SPECIFICATION
+    mssql:
+        server: dummy
+        database: records1
+        username: na
+        password: na
+        records1:
+            - - 10
+              - 98ab
+              - cm00001-1_scrapable
+              - SWISSci_3Drop
+            - - 11
+              - 98ad
+              - cm00001-badvisit_barcode
+              - SWISSci_3drop
+        records_for_plate_injector:
+            - - 1
+              - 98ab
+              - cm00001-1_something#else
+              - SWISSci_3Drop
+            - - 2
+              - 98ax
+              - cm00001_bad_visit_format
+              - SWISSci_3drop
+
+# -----------------------------------------------------------------------------
+# The xchembku_dataface direct access.
+xchembku_dataface_specification_direct: &XCHEMBKU_DATAFACE_SPECIFICATION_DIRECT
+    type: "xchembku_lib.xchembku_datafaces.direct"
+    database:
+        type: "dls_normsql.aiosqlite"
+        filename: "${output_directory}/xchembku_dataface.sqlite"
+        log_level: "WARNING"
+
+# The xchembku_dataface client/server composite.
+xchembku_dataface_specification: &XCHEMBKU_DATAFACE_SPECIFICATION
+    type: "xchembku_lib.xchembku_datafaces.aiohttp"
+    type_specific_tbd:
+        # The remote xchembku_dataface server access.
+        aiohttp_specification:
+            server: *XCHEMBKU_DATAFACE_SERVER
+            client: *XCHEMBKU_DATAFACE_CLIENT
+        # The local implementation of the xchembku_dataface.
+        actual_xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION_DIRECT
+    context:
+        start_as: process
+
+# -----------------------------------------------------------------------------
+
+# The rockingester direct access.
+rockingester_collector_specification_direct_poll:
+    &ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
+    type: "rockingester_lib.collectors.direct_poll"
+    type_specific_tbd:
+        plates_directories:
+            - "${output_directory}/SubwellImages"
+        max_wait_seconds: 3.0
+        visits_directory: *VISITS_DIRECTORY
+        visit_plates_subdirectory: *VISIT_PLATES_SUBDIRECTORY
+        xchembku_dataface_specification: *XCHEMBKU_DATAFACE_SPECIFICATION
+        ftrix_client_specification: *FTRIX_CLIENT_SPECIFICATION
+        ingest_only_barcodes:
+            - 98ab
+            - 98ac
+            - 98ad
+
+# The rockingester client/server composite.
+rockingester_collector_specification:
+    type: "rockingester_lib.collectors.aiohttp"
+    type_specific_tbd:
+        # The remote rockingester server access.
+        aiohttp_specification:
+            server: *ROCKINGESTER_SERVER
+            client: *ROCKINGESTER_CLIENT
+        # The local implementation of the rockingester.
+        direct_collector_specification: *ROCKINGESTER_COLLECTOR_SPECIFICATION_DIRECT_POLL
+    context:
+        start_as: process

@@ -1,5 +1,5 @@
 .. # ********** Please don't edit this file!
-.. # ********** It has been generated automatically by dae_devops version 0.5.2.
+.. # ********** It has been generated automatically by dae_devops version 0.5.3.
 .. # ********** For repository_name rockingester
 
 Developing
@@ -9,11 +9,12 @@ If you plan to make change to the code in this repository, you can use the steps
 
 Clone the repository::
 
+    $ cd <your development area>
     $ git clone https://github.com/diamondlightsource/rockingester/rockingester.git
 
 It is recommended that you install into a virtual environment so this
 installation will not interfere with any existing Python software.
-Make sure to have at least python version 3.9 then::
+Make sure to have at least python version 3.10 then::
 
     $ python3 -m venv /scratch/$USER/myvenv
     $ source /scratch/$USER/myvenv/bin/activate
@@ -22,18 +23,9 @@ Make sure to have at least python version 3.9 then::
 Install the package in edit mode which will also install all its dependencies::
 
     $ cd rockingester
-    $ export PIP_FIND_LINKS=/dls_sw/apps/bxflow/artifacts
-    $ pip install -e .[dev]
+    $ pip install -e .[dev,docs]
 
 Now you may begin modifying the code.
 
-|
 
-If you plan to modify the docs, you will need to::
-
-    $ pip install -e .[docs]
-
-    
-
-
-.. # dae_devops_fingerprint 9ed81ab6cfb9cd8a6f7df3d6a8fce3eb
+.. # dae_devops_fingerprint 96d41b708572d1d5049fab9b6abfb97e

@@ -1,5 +1,5 @@
 # ********** Please don't edit this file!
-# ********** It has been generated automatically by dae_devops version 0.5.2.
+# ********** It has been generated automatically by dae_devops version 0.5.3.
 # ********** For repository_name rockingester
 
 # This file is for use as a devcontainer and a runtime container
@@ -40,4 +40,4 @@ ENV PATH=/venv/bin:$PATH
 ENTRYPOINT ["rockingester"]
 CMD ["--version"]
 
-# dae_devops_fingerprint 5107e2dc7615b1579db65b5ac08b3a91
+# dae_devops_fingerprint 35139fc4006e8d4d91cada0df5424ab7

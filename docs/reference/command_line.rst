@@ -1,9 +1,9 @@
 Command Line
 =======================================================================
 
-dls-multiconf
+rockingester
 -----------------------------------------------------------------------
 .. argparse:: 
-    :module: dls_multiconf_lib.__main__
+    :module: rockingester_lib.__main__
     :func: get_parser
-    :prog: dls-multiconf
+    :prog: rockingester

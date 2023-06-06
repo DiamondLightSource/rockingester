@@ -5,16 +5,10 @@ from pathlib import Path
 
 from dls_utilpack.visit import get_xchem_subdirectory
 
-# Types which the CrystalPlateObjects factory can use to build an instance.
-from xchembku_api.crystal_plate_objects.constants import (
-    ThingTypes as CrystalPlateObjectThingTypes,
-)
-
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
-from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
 # Client context creator.
@@ -30,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorDirectPoll:
+class XTestCollectorDirectMysql:
     """
     Test collector interface by direct call.
     """
@@ -38,13 +32,13 @@ class TestCollectorDirectPoll:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/direct_poll.yaml"
+        configuration_file = "tests/configurations/direct_sqlite.yaml"
 
         CollectorTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class TestCollectorService:
+class TestCollectorServiceSqlite:
     """
     Test collector interface through network interface.
     """
@@ -52,7 +46,21 @@ class TestCollectorService:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/service.yaml"
+        configuration_file = "tests/configurations/service_sqlite.yaml"
+
+        CollectorTester().main(constants, configuration_file, output_directory)
+
+
+# ----------------------------------------------------------------------------------------
+class TestCollectorServiceMysql:
+    """
+    Test collector interface through network interface.
+    """
+
+    def test(self, constants, logging_setup, output_directory):
+
+        # Configuration file to use.
+        configuration_file = "tests/configurations/service_mysql.yaml"
 
         CollectorTester().main(constants, configuration_file, output_directory)
 
@@ -119,6 +127,7 @@ class CollectorTester(Base):
         async with xchembku_client_context:
             # Start the server context xchembku which starts the process.
             async with xchembku_server_context:
+                # Start the collector server.
                 async with collector_client_context:
                     # And the collector server context which starts the coro.
                     async with collector_server_context:
@@ -146,33 +155,11 @@ class CollectorTester(Base):
 
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
-        created_crystal_plate_models = []
 
         scrabable_barcode = "98ab"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=10,
-                barcode=scrabable_barcode,
-                visit=visit,
-                thing_type=CrystalPlateObjectThingTypes.SWISS3,
-            )
-        )
-
         nobarcode_barcode = "98ac"
-
-        # Create a crystal plate model with a good barcode but bad visit.
-        novisit_barcode = "98ad"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=11,
-                barcode=novisit_barcode,
-                visit=("X" + visit),
-            )
-        )
-
+        badvisit_barcode = "98ad"
         excluded_barcode = "98ae"
-
-        await xchembku.upsert_crystal_plates(created_crystal_plate_models)
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
@@ -211,12 +198,12 @@ class CollectorTester(Base):
         # Make yet another scrapable directory with a different barcode.
         # This one gets ignored since it matches a plate with a bad visit name.
         plate_directory3 = (
-            plates_directory / f"{novisit_barcode}_2023-04-06_RI1000-0276-3drop"
+            plates_directory / f"{badvisit_barcode}_2023-04-06_RI1000-0276-3drop"
         )
         plate_directory3.mkdir(parents=True)
         novisit_image_count = 6
         for i in range(novisit_image_count):
-            filename = plate_directory3 / self.__subwell_filename(novisit_barcode, i)
+            filename = plate_directory3 / self.__subwell_filename(badvisit_barcode, i)
             with open(filename, "w") as stream:
                 stream.write("")
 

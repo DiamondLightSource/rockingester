@@ -5,7 +5,7 @@ from typing import Dict
 from dls_utilpack.server_context_base import ServerContextBase
 
 # Things created in the context.
-from rockingester_lib.collectors.collectors import Collectors, collectors_set_default
+from rockingester_lib.collectors.collectors import Collectors
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ class Context(ServerContextBase):
 
         Args:
             specification (Dict): specification of the collector object to be constructed within the context.
-                The only key in the specification that relates to the context is "start_as", which can be "coro", "thread", "process" or None.
+                The only key in the specification that relates to the context is "start_as", which can be "coro", "thread", "process", "direct", or None.
                 All other keys in the specification relate to creating the collector object.
         """
         ServerContextBase.__init__(self, thing_type, specification)
@@ -71,12 +71,8 @@ class Context(ServerContextBase):
 
         if self.server is not None:
             if self.context_specification.get("start_as") == "process":
-                logger.info(
-                    "[DISSHU] in context exit, sending shutdown to client process"
-                )
                 # Put in request to shutdown the server.
                 await self.server.client_shutdown()
-                logger.info("[DISSHU] in context exit, sent shutdown to client process")
 
             if self.context_specification.get("start_as") == "coro":
                 await self.server.direct_shutdown()

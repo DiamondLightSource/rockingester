@@ -1,5 +1,5 @@
 .. # ********** Please don't edit this file!
-.. # ********** It has been generated automatically by dae_devops version 0.5.2.
+.. # ********** It has been generated automatically by dae_devops version 0.5.3.
 .. # ********** For repository_name rockingester
 
 Contributing to the project
@@ -38,4 +38,4 @@ should follow.
 
 .. _Developer Guide: https://diamondlightsource.github.io/rockingester/main/developer/how-to/contribute.html
 
-.. # dae_devops_fingerprint 6af4c15a85db612138b071dbd11dde21
+.. # dae_devops_fingerprint 8a36b439242bc5f2a7ed6519355db457

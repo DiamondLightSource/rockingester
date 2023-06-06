@@ -5,16 +5,10 @@ from pathlib import Path
 
 from dls_utilpack.visit import get_xchem_subdirectory
 
-# Types which the CrystalPlateObjects factory can use to build an instance.
-from xchembku_api.crystal_plate_objects.constants import (
-    ThingTypes as CrystalPlateObjectThingTypes,
-)
-
 # Things xchembku provides.
 from xchembku_api.datafaces.context import Context as XchembkuDatafaceClientContext
 from xchembku_api.datafaces.datafaces import xchembku_datafaces_get_default
 from xchembku_api.models.crystal_plate_filter_model import CrystalPlateFilterModel
-from xchembku_api.models.crystal_plate_model import CrystalPlateModel
 from xchembku_lib.datafaces.context import Context as XchembkuDatafaceServerContext
 
 # Client context creator.
@@ -30,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 # ----------------------------------------------------------------------------------------
-class TestPlatewaitDirectPoll:
+class TestPlatewaitDirectMysql:
     """
     Test collector interface by direct call.
     """
@@ -38,13 +32,13 @@ class TestPlatewaitDirectPoll:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/direct_poll.yaml"
+        configuration_file = "tests/configurations/direct_sqlite.yaml"
 
         PlatewaitTester().main(constants, configuration_file, output_directory)
 
 
 # ----------------------------------------------------------------------------------------
-class TestPlatewaitService:
+class TestPlatewaitServiceSqlite:
     """
     Test collector interface through network interface.
     """
@@ -52,7 +46,21 @@ class TestPlatewaitService:
     def test(self, constants, logging_setup, output_directory):
 
         # Configuration file to use.
-        configuration_file = "tests/configurations/service.yaml"
+        configuration_file = "tests/configurations/service_sqlite.yaml"
+
+        PlatewaitTester().main(constants, configuration_file, output_directory)
+
+
+# ----------------------------------------------------------------------------------------
+class TestPlatewaitServiceMysql:
+    """
+    Test collector interface through network interface.
+    """
+
+    def test(self, constants, logging_setup, output_directory):
+
+        # Configuration file to use.
+        configuration_file = "tests/configurations/service_mysql.yaml"
 
         PlatewaitTester().main(constants, configuration_file, output_directory)
 
@@ -125,21 +133,8 @@ class PlatewaitTester(Base):
 
         # Make the plate on which the wells reside.
         visit = "cm00001-1_otherstuff"
-        created_crystal_plate_models = []
 
         scrabable_barcode = "98ab"
-        created_crystal_plate_models.append(
-            CrystalPlateModel(
-                formulatrix__plate__id=10,
-                barcode=scrabable_barcode,
-                visit=visit,
-                thing_type=CrystalPlateObjectThingTypes.SWISS3,
-            )
-        )
-
-        await xchembku.upsert_crystal_plates(created_crystal_plate_models)
-        # Make sure the crystal plate is committed into the datbase before we start writing its images to disk.
-        await xchembku.commit()
 
         visit_directory = self.__visits_directory / get_xchem_subdirectory(visit)
         visit_directory.mkdir(parents=True)
