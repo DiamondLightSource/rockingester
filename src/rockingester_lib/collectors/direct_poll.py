@@ -300,6 +300,11 @@ class DirectPoll(CollectorBase):
         Adds discovered files to internal list which gets pushed when it reaches a configurable size.
 
         TODO: Consider some other flow where well images can be copied as they arrive instead of doing them all in a bunch.
+
+        Args:
+            plate_directory: disk directory where to look for subwell images
+            crystal_plate_model: pre-built crystal plate description
+            visit_directory: full path to the top of the visit directory
         """
 
         # Name of the destination directory where we will permanently store ingested well image files.
