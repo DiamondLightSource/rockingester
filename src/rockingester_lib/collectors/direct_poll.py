@@ -183,7 +183,9 @@ class DirectPoll(CollectorBase):
     # ----------------------------------------------------------------------------------------
     async def scrape_plates_directories(self) -> None:
         """
-        Scrape all the configured directories looking for new files.
+        Scrape all the configured directories looking in each one for new plate directories.
+
+        Normally there is only one in the configured list of these places where plates arrive.
         """
 
         # TODO: Use asyncio tasks to paralellize scraping plates directories.
@@ -268,10 +270,7 @@ class DirectPoll(CollectorBase):
             self.__visits_directory,
         )
 
-        logger.debug(
-            f"[CRYERR] for plate_barcode {plate_barcode} crystal_plate_model.error is {crystal_plate_model.error}"
-        )
-
+        # The model has not been marked as being in error?
         if crystal_plate_model.error is None:
             visit_directory = get_xchem_directory(
                 self.__visits_directory, crystal_plate_model.visit
@@ -283,8 +282,14 @@ class DirectPoll(CollectorBase):
                 crystal_plate_model,
                 visit_directory,
             )
+
+        # The model has been marked as being in error?
         else:
-            # Remember we "handled" this one.
+            logger.debug(
+                f"[ROCKDIR] for plate_barcode {plate_barcode} crystal_plate_model.error is: {crystal_plate_model.error}"
+            )
+            # Remember we "handled" this one within the current instance.
+            # Keeping this list could be obviated if we could move the files out of the plates directory after we process them.
             self.__handled_plate_names.append(plate_name)
 
     # ----------------------------------------------------------------------------------------
@@ -318,7 +323,7 @@ class DirectPoll(CollectorBase):
         if target.is_dir():
             # Presumably this is done, so no error but log it.
             logger.debug(
-                f"[ROCKDIR] plate_barcode {plate_directory.name} is apparently already copied to {target}"
+                f"[ROCKDIR] plate directory {plate_directory.name} is apparently already copied to {target}"
             )
             self.__handled_plate_names.append(plate_directory.stem)
             return
