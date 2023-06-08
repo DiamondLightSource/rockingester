@@ -8,7 +8,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>rockingester_lib.collectors.direct_poll &#8212; rockingester 3.0.2 documentation</title>
+    <title>rockingester_lib.collectors.direct_poll &#8212; rockingester 3.0.4 documentation</title>
   
   
   
@@ -559,7 +559,9 @@ document.write(`
     <span class="c1"># ----------------------------------------------------------------------------------------</span>
 <div class="viewcode-block" id="DirectPoll.scrape_plates_directories"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.scrape_plates_directories">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">scrape_plates_directories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Scrape all the configured directories looking for new files.</span>
+<span class="sd">        Scrape all the configured directories looking in each one for new plate directories.</span>
+
+<span class="sd">        Normally there is only one in the configured list of these places where plates arrive.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="c1"># TODO: Use asyncio tasks to paralellize scraping plates directories.</span>
@@ -644,10 +646,7 @@ document.write(`
             <span class="bp">self</span><span class="o">.</span><span class="n">__visits_directory</span><span class="p">,</span>
         <span class="p">)</span>
 
-        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-            <span class="sa">f</span><span class="s2">&quot;[CRYERR] for plate_barcode </span><span class="si">{</span><span class="n">plate_barcode</span><span class="si">}</span><span class="s2"> crystal_plate_model.error is </span><span class="si">{</span><span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span>
-        <span class="p">)</span>
-
+        <span class="c1"># The model has not been marked as being in error?</span>
         <span class="k">if</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
             <span class="n">visit_directory</span> <span class="o">=</span> <span class="n">get_xchem_directory</span><span class="p">(</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">__visits_directory</span><span class="p">,</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">visit</span>
@@ -659,8 +658,14 @@ document.write(`
                 <span class="n">crystal_plate_model</span><span class="p">,</span>
                 <span class="n">visit_directory</span><span class="p">,</span>
             <span class="p">)</span>
+
+        <span class="c1"># The model has been marked as being in error?</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="c1"># Remember we &quot;handled&quot; this one.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[ROCKDIR] for plate_barcode </span><span class="si">{</span><span class="n">plate_barcode</span><span class="si">}</span><span class="s2"> crystal_plate_model.error is: </span><span class="si">{</span><span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># Remember we &quot;handled&quot; this one within the current instance.</span>
+            <span class="c1"># Keeping this list could be obviated if we could move the files out of the plates directory after we process them.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plate_name</span><span class="p">)</span></div>
 
     <span class="c1"># ----------------------------------------------------------------------------------------</span>
@@ -694,7 +699,7 @@ document.write(`
         <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
             <span class="c1"># Presumably this is done, so no error but log it.</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;[ROCKDIR] plate_barcode </span><span class="si">{</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is apparently already copied to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;[ROCKDIR] plate directory </span><span class="si">{</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is apparently already copied to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span>
             <span class="p">)</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
             <span class="k">return</span>
