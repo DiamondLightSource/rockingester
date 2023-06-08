@@ -1,0 +1,893 @@
+
+
+<!DOCTYPE html>
+
+
+<html lang="en" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>rockingester_lib.collectors.direct_poll &#8212; rockingester 3.0.4 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../../../_static/styles/theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/bootstrap.css?digest=e353d410970836974a52" rel="stylesheet" />
+<link href="../../../_static/styles/pydata-sphinx-theme.css?digest=e353d410970836974a52" rel="stylesheet" />
+
+  
+  <link href="../../../_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=e353d410970836974a52" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/copybutton.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/design-style.1e8bd061cd6da7fc9cf755528e8ffc24.min.css" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/css/custom.css" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52" />
+<link rel="preload" as="script" href="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52" />
+
+    <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+    <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/sphinx_highlight.js"></script>
+    <script src="../../../_static/clipboard.min.js"></script>
+    <script src="../../../_static/copybutton.js"></script>
+    <script src="../../../_static/design-tabs.js"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = '_modules/rockingester_lib/collectors/direct_poll';</script>
+    <link rel="icon" href="../../../_static/dls-favicon.ico"/>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="../../../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="../../../index.html">
+  
+  
+  
+  
+    
+    
+      
+    
+    
+    <img src="../../../_static/dls-logo.svg" class="logo__image only-light" alt="Logo image"/>
+    <script>document.write(`<img src="../../../_static/dls-logo.svg" class="logo__image only-dark" alt="Logo image"/>`);</script>
+  
+  
+    <p class="title logo__title">rockingester</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../tutorials/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../how-to/index.html">
+                        How-to Guides
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../explanations/index.html">
+                        Explanations
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../reference/index.html">
+                        Reference
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+        <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/diamondlightsource/rockingester/rockingester" title="GitLab" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-gitlab"></i></span>
+            <label class="sr-only">GitLab</label></a>
+        </li>
+</ul></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../tutorials/index.html">
+                        Tutorials
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../how-to/index.html">
+                        How-to Guides
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../explanations/index.html">
+                        Explanations
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="../../../reference/index.html">
+                        Reference
+                      </a>
+                    </li>
+                
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+          <div class="navbar-item"><ul class="navbar-icon-links navbar-nav"
+    aria-label="Icon Links">
+        <li class="nav-item">
+          
+          
+          
+          
+          
+          
+          
+          
+          <a href="https://github.com/diamondlightsource/rockingester/rockingester" title="GitLab" class="nav-link" rel="noopener" target="_blank" data-bs-toggle="tooltip" data-bs-placement="bottom"><span><i class="fa-brands fa-square-gitlab"></i></span>
+            <label class="sr-only">GitLab</label></a>
+        </li>
+</ul></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../../../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="../../index.html" class="nav-link">Module code</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">rockingester_lib.collectors.direct_poll</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
+  <h1>Source code for rockingester_lib.collectors.direct_poll</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">asyncio</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">List</span>
+
+<span class="kn">from</span> <span class="nn">dls_utilpack.callsign</span> <span class="kn">import</span> <span class="n">callsign</span>
+<span class="kn">from</span> <span class="nn">dls_utilpack.explain</span> <span class="kn">import</span> <span class="n">explain2</span>
+<span class="kn">from</span> <span class="nn">dls_utilpack.require</span> <span class="kn">import</span> <span class="n">require</span>
+<span class="kn">from</span> <span class="nn">dls_utilpack.visit</span> <span class="kn">import</span> <span class="n">get_xchem_directory</span>
+<span class="kn">from</span> <span class="nn">PIL</span> <span class="kn">import</span> <span class="n">Image</span>
+
+<span class="c1"># Crystal plate object interface.</span>
+<span class="kn">from</span> <span class="nn">xchembku_api.crystal_plate_objects.interface</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Interface</span> <span class="k">as</span> <span class="n">CrystalPlateInterface</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Dataface client context.</span>
+<span class="kn">from</span> <span class="nn">xchembku_api.datafaces.context</span> <span class="kn">import</span> <span class="n">Context</span> <span class="k">as</span> <span class="n">XchembkuDatafaceClientContext</span>
+
+<span class="c1"># Crystal plate pydantic model.</span>
+<span class="kn">from</span> <span class="nn">xchembku_api.models.crystal_plate_model</span> <span class="kn">import</span> <span class="n">CrystalPlateModel</span>
+
+<span class="c1"># Crystal well pydantic model.</span>
+<span class="kn">from</span> <span class="nn">xchembku_api.models.crystal_well_model</span> <span class="kn">import</span> <span class="n">CrystalWellModel</span>
+
+<span class="c1"># Crystal plate objects factory.</span>
+<span class="kn">from</span> <span class="nn">xchembku_lib.crystal_plate_objects.crystal_plate_objects</span> <span class="kn">import</span> <span class="n">CrystalPlateObjects</span>
+
+<span class="c1"># Base class for collector instances.</span>
+<span class="kn">from</span> <span class="nn">rockingester_lib.collectors.base</span> <span class="kn">import</span> <span class="n">Base</span> <span class="k">as</span> <span class="n">CollectorBase</span>
+
+<span class="c1"># Object able to talk to the formulatrix database.</span>
+<span class="kn">from</span> <span class="nn">rockingester_lib.ftrix_client</span> <span class="kn">import</span> <span class="n">FtrixClient</span>
+
+<span class="c1"># Object which can inject new xchembku plate records discovered while looking in subwell images.</span>
+<span class="kn">from</span> <span class="nn">rockingester_lib.plate_injector</span> <span class="kn">import</span> <span class="n">PlateInjector</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="n">thing_type</span> <span class="o">=</span> <span class="s2">&quot;rockingester_lib.collectors.direct_poll&quot;</span>
+
+
+<span class="c1"># ------------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll">[docs]</a><span class="k">class</span> <span class="nc">DirectPoll</span><span class="p">(</span><span class="n">CollectorBase</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Object representing an image collector.</span>
+<span class="sd">    The behavior is to start a coro task to waken every few seconds and scan for newly created plate directories.</span>
+<span class="sd">    Image files are pushed to xchembku.</span>
+<span class="sd">    Plates for the image files are also pushed to xchembku the first time they are wanted.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="n">predefined_uuid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">CollectorBase</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span> <span class="n">thing_type</span><span class="p">,</span> <span class="n">specification</span><span class="p">,</span> <span class="n">predefined_uuid</span><span class="o">=</span><span class="n">predefined_uuid</span>
+        <span class="p">)</span>
+
+        <span class="n">s</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">callsign</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> specification&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">specification</span><span class="p">()</span>
+
+        <span class="n">type_specific_tbd</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">specification</span><span class="p">(),</span> <span class="s2">&quot;type_specific_tbd&quot;</span><span class="p">)</span>
+
+        <span class="c1"># The sources for the collecting.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__plates_directories</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">type_specific_tbd</span><span class="p">,</span> <span class="s2">&quot;plates_directories&quot;</span><span class="p">)</span>
+
+        <span class="c1"># The root directory of all visits.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__visits_directory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+            <span class="n">require</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">type_specific_tbd</span><span class="p">,</span> <span class="s2">&quot;visits_directory&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># The subdirectory under a visit where to put subwell images that are collected.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__visit_plates_subdirectory</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span>
+            <span class="n">require</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">type_specific_tbd</span><span class="p">,</span> <span class="s2">&quot;visit_plates_subdirectory&quot;</span><span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Reference the dict entry for the ftrix client specification.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ftrix_client_specification</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span>
+            <span class="n">s</span><span class="p">,</span> <span class="n">type_specific_tbd</span><span class="p">,</span> <span class="s2">&quot;ftrix_client_specification&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Explicit list of barcodes to process (used when testing a deployment).</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ingest_only_barcodes</span> <span class="o">=</span> <span class="n">type_specific_tbd</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ingest_only_barcodes&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Maximum time to wait for final image to arrive, relative to time of last arrived image.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__max_wait_seconds</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">type_specific_tbd</span><span class="p">,</span> <span class="s2">&quot;max_wait_seconds&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Database where we will get plate barcodes and add new wells.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Object able to talk to the formulatrix database.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ftrix_client</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># This flag will stop the ticking async task.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__keep_ticking</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tick_future</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># The plate names which we have already finished handling within the current instance.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.activate"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.activate">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Activate the object.</span>
+
+<span class="sd">        Then it starts the coro task to awaken every few seconds to scrape the directories.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Make the xchembku client context.</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">callsign</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> specification&quot;</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">specification</span><span class="p">(),</span>
+            <span class="s2">&quot;type_specific_tbd&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">require</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">callsign</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">}</span><span class="s2"> type_specific_tbd&quot;</span><span class="p">,</span>
+            <span class="n">s</span><span class="p">,</span>
+            <span class="s2">&quot;xchembku_dataface_specification&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span> <span class="o">=</span> <span class="n">XchembkuDatafaceClientContext</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+
+        <span class="c1"># Activate the context.</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span><span class="o">.</span><span class="n">aenter</span><span class="p">()</span>
+
+        <span class="c1"># Get a reference to the xchembku interface provided by the context.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span><span class="o">.</span><span class="n">get_interface</span><span class="p">()</span>
+
+        <span class="c1"># Object able to talk to the formulatrix database.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__ftrix_client</span> <span class="o">=</span> <span class="n">FtrixClient</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ftrix_client_specification</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Object which can inject new xchembku plate records discovered while looking in subwell images.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__plate_injector</span> <span class="o">=</span> <span class="n">PlateInjector</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__ftrix_client</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="c1"># Poll periodically.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__tick_future</span> <span class="o">=</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">get_event_loop</span><span class="p">()</span><span class="o">.</span><span class="n">create_task</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tick</span><span class="p">())</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.deactivate"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.deactivate">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">deactivate</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Deactivate the object.</span>
+
+<span class="sd">        Causes the coro task to stop.</span>
+
+<span class="sd">        This implementation then releases resources relating to the xchembku connection.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tick_future</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Set flag to stop the periodic ticking.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__keep_ticking</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="c1"># Wait for the ticking to stop.</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tick_future</span>
+
+        <span class="c1"># Forget we have an xchembku client reference.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span><span class="o">.</span><span class="n">aexit</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku_client_context</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.tick"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.tick">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">tick</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        A coro task which does periodic checking for new files in the directories.</span>
+
+<span class="sd">        Stops when flag has been set by other tasks.</span>
+
+<span class="sd">        # TODO: Use an event to awaken ticker early to handle stop requests sooner.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">while</span> <span class="bp">self</span><span class="o">.</span><span class="n">__keep_ticking</span><span class="p">:</span>
+            <span class="c1"># Scrape all the configured plates directories.</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_plates_directories</span><span class="p">()</span>
+
+            <span class="c1"># TODO: Make periodic tick period to be configurable.</span>
+            <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">1.0</span><span class="p">)</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.scrape_plates_directories"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.scrape_plates_directories">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">scrape_plates_directories</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scrape all the configured directories looking in each one for new plate directories.</span>
+
+<span class="sd">        Normally there is only one in the configured list of these places where plates arrive.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># TODO: Use asyncio tasks to paralellize scraping plates directories.</span>
+        <span class="k">for</span> <span class="n">directory</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__plates_directories</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_plates_directory</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">directory</span><span class="p">))</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+                <span class="c1"># Just log the error, tag as anomaly for reporting, don&#39;t die.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;[ANOMALY] &quot;</span>
+                    <span class="o">+</span> <span class="n">explain2</span><span class="p">(</span><span class="n">exception</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;scraping plates directory </span><span class="si">{</span><span class="n">directory</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">),</span>
+                    <span class="n">exc_info</span><span class="o">=</span><span class="n">exception</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.scrape_plates_directory"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.scrape_plates_directory">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">scrape_plates_directory</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">plates_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scrape a single directory looking for subdirectories which correspond to plates.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">plates_directory</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="k">return</span>
+
+        <span class="n">plate_names</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">entry</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">plates_directory</span><span class="p">)</span> <span class="k">if</span> <span class="n">entry</span><span class="o">.</span><span class="n">is_dir</span><span class="p">()</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Make sure we scrape the plate directories in barcode-order, which is the same as date order.</span>
+        <span class="n">plate_names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;[ROCKINGESTER POLL] found </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">plate_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> plate directories in </span><span class="si">{</span><span class="n">plates_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">plate_name</span> <span class="ow">in</span> <span class="n">plate_names</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_plate_directory</span><span class="p">(</span><span class="n">plates_directory</span> <span class="o">/</span> <span class="n">plate_name</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+                <span class="c1"># Just log the error, tag as anomaly for reporting, don&#39;t die.</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                    <span class="s2">&quot;[ANOMALY] &quot;</span>
+                    <span class="o">+</span> <span class="n">explain2</span><span class="p">(</span>
+                        <span class="n">exception</span><span class="p">,</span>
+                        <span class="sa">f</span><span class="s2">&quot;scraping plate directory </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">plates_directory</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">plate_name</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">exc_info</span><span class="o">=</span><span class="n">exception</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.scrape_plate_directory"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.scrape_plate_directory">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">scrape_plate_directory</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">plate_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scrape a single directory looking for images.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">plate_name</span> <span class="o">=</span> <span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="c1"># We already handled this plate name?</span>
+        <span class="k">if</span> <span class="n">plate_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="p">:</span>
+            <span class="c1"># logger.debug(</span>
+            <span class="c1">#     f&quot;[ROCKINGESTER POLL] plate_barcode {plate_barcode}&quot;</span>
+            <span class="c1">#     f&quot; is already handled in this instance&quot;</span>
+            <span class="c1"># )</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Get the plate&#39;s barcode from the directory name.</span>
+        <span class="n">plate_barcode</span> <span class="o">=</span> <span class="n">plate_name</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">4</span><span class="p">]</span>
+
+        <span class="c1"># We have a specific list we want to process?</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ingest_only_barcodes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">plate_barcode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__ingest_only_barcodes</span><span class="p">:</span>
+                <span class="k">return</span>
+
+        <span class="c1"># Get the matching plate record from the xchembku or formulatrix database.</span>
+        <span class="n">crystal_plate_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__plate_injector</span><span class="o">.</span><span class="n">find_or_inject_barcode</span><span class="p">(</span>
+            <span class="n">plate_barcode</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__visits_directory</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="c1"># The model has not been marked as being in error?</span>
+        <span class="k">if</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">error</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">visit_directory</span> <span class="o">=</span> <span class="n">get_xchem_directory</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__visits_directory</span><span class="p">,</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">visit</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Scrape the directory when all image files have arrived.</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">scrape_plate_directory_if_complete</span><span class="p">(</span>
+                <span class="n">plate_directory</span><span class="p">,</span>
+                <span class="n">crystal_plate_model</span><span class="p">,</span>
+                <span class="n">visit_directory</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># The model has been marked as being in error?</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[ROCKDIR] for plate_barcode </span><span class="si">{</span><span class="n">plate_barcode</span><span class="si">}</span><span class="s2"> crystal_plate_model.error is: </span><span class="si">{</span><span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">error</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="c1"># Remember we &quot;handled&quot; this one within the current instance.</span>
+            <span class="c1"># Keeping this list could be obviated if we could move the files out of the plates directory after we process them.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plate_name</span><span class="p">)</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.scrape_plate_directory_if_complete"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.scrape_plate_directory_if_complete">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">scrape_plate_directory_if_complete</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">plate_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">crystal_plate_model</span><span class="p">:</span> <span class="n">CrystalPlateModel</span><span class="p">,</span>
+        <span class="n">visit_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Scrape a single directory looking for new files.</span>
+
+<span class="sd">        Adds discovered files to internal list which gets pushed when it reaches a configurable size.</span>
+
+<span class="sd">        TODO: Consider some other flow where well images can be copied as they arrive instead of doing them all in a bunch.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            plate_directory: disk directory where to look for subwell images</span>
+<span class="sd">            crystal_plate_model: pre-built crystal plate description</span>
+<span class="sd">            visit_directory: full path to the top of the visit directory</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Name of the destination directory where we will permanently store ingested well image files.</span>
+        <span class="n">target</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">visit_directory</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">__visit_plates_subdirectory</span> <span class="o">/</span> <span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span>
+        <span class="p">)</span>
+
+        <span class="c1"># We have already put this plate directory into the visit directory?</span>
+        <span class="c1"># This shouldn&#39;t really happen except when someone has been fiddling with the database.</span>
+        <span class="c1"># TODO: Have a way to rebuild rockingest after database wipe, but images have already been copied to the visit.</span>
+        <span class="k">if</span> <span class="n">target</span><span class="o">.</span><span class="n">is_dir</span><span class="p">():</span>
+            <span class="c1"># Presumably this is done, so no error but log it.</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[ROCKDIR] plate directory </span><span class="si">{</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is apparently already copied to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="c1"># This is the first time we have scraped a directory for this plate record in the database?</span>
+        <span class="k">if</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">rockminer_collected_stem</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># Update the path stem in the crystal plate record.</span>
+            <span class="c1"># TODO: Consider if important to report/record same barcodes on different rockmaker directories.</span>
+            <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">rockminer_collected_stem</span> <span class="o">=</span> <span class="n">plate_directory</span><span class="o">.</span><span class="n">stem</span>
+            <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span><span class="o">.</span><span class="n">upsert_crystal_plates</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">crystal_plate_model</span><span class="p">],</span> <span class="s2">&quot;update rockminer_collected_stem&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Get all the well images in the plate directory and the latest arrival time.</span>
+        <span class="n">subwell_names</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">max_wait_seconds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max_wait_seconds</span>
+        <span class="n">max_mtime</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">stat</span><span class="p">(</span><span class="n">plate_directory</span><span class="p">)</span><span class="o">.</span><span class="n">st_mtime</span>
+
+        <span class="k">with</span> <span class="n">os</span><span class="o">.</span><span class="n">scandir</span><span class="p">(</span><span class="n">plate_directory</span><span class="p">)</span> <span class="k">as</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+                <span class="n">subwell_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+                <span class="n">max_mtime</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">max_mtime</span><span class="p">,</span> <span class="n">entry</span><span class="o">.</span><span class="n">stat</span><span class="p">()</span><span class="o">.</span><span class="n">st_mtime</span><span class="p">)</span>
+
+        <span class="c1"># TODO: Verify that time.time() where rockingester runs matches os.stat() on filesystem from which images are collected.</span>
+        <span class="n">waited_seconds</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">max_mtime</span>
+
+        <span class="c1"># Make an object corresponding to the crystal plate model&#39;s type.</span>
+        <span class="n">crystal_plate_object</span> <span class="o">=</span> <span class="n">CrystalPlateObjects</span><span class="p">()</span><span class="o">.</span><span class="n">build_object</span><span class="p">(</span>
+            <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">thing_type</span><span class="p">}</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Don&#39;t handle the plate directory until all images have arrived or some maximum wait has exceeded.</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">subwell_names</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">crystal_plate_object</span><span class="o">.</span><span class="n">get_well_count</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">waited_seconds</span> <span class="o">&lt;</span> <span class="n">max_wait_seconds</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;[PLATEWAIT] waiting longer since found only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subwell_names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; out of </span><span class="si">{</span><span class="n">crystal_plate_object</span><span class="o">.</span><span class="n">get_well_count</span><span class="p">()</span><span class="si">}</span><span class="s2"> subwell images&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; in </span><span class="si">{</span><span class="n">plate_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; after waiting </span><span class="si">{</span><span class="s1">&#39;</span><span class="si">%0.1f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">waited_seconds</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">max_wait_seconds</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+                <span class="p">)</span>
+                <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;[PLATEDONE] done waiting even though found only </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subwell_names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; out of </span><span class="si">{</span><span class="n">crystal_plate_object</span><span class="o">.</span><span class="n">get_well_count</span><span class="p">()</span><span class="si">}</span><span class="s2"> subwell images&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; in </span><span class="si">{</span><span class="n">plate_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+                    <span class="sa">f</span><span class="s2">&quot; after waiting </span><span class="si">{</span><span class="s1">&#39;</span><span class="si">%0.1f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">waited_seconds</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">max_wait_seconds</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+                <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="sa">f</span><span class="s2">&quot;[PLATEDONE] done waiting since found all </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subwell_names</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; out of </span><span class="si">{</span><span class="n">crystal_plate_object</span><span class="o">.</span><span class="n">get_well_count</span><span class="p">()</span><span class="si">}</span><span class="s2"> subwell images&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; in </span><span class="si">{</span><span class="n">plate_directory</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">&quot; after waiting </span><span class="si">{</span><span class="s1">&#39;</span><span class="si">%0.1f</span><span class="s1">&#39;</span><span class="w"> </span><span class="o">%</span><span class="w"> </span><span class="n">waited_seconds</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">max_wait_seconds</span><span class="si">}</span><span class="s2"> seconds&quot;</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Sort wells by name so that tests are deterministic.</span>
+        <span class="n">subwell_names</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="n">crystal_well_models</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">CrystalWellModel</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">subwell_name</span> <span class="ow">in</span> <span class="n">subwell_names</span><span class="p">:</span>
+            <span class="c1"># Make the well model, including image width/height.</span>
+            <span class="n">crystal_well_model</span> <span class="o">=</span> <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">ingest_well</span><span class="p">(</span>
+                <span class="n">plate_directory</span><span class="p">,</span>
+                <span class="n">subwell_name</span><span class="p">,</span>
+                <span class="n">crystal_plate_model</span><span class="p">,</span>
+                <span class="n">crystal_plate_object</span><span class="p">,</span>
+                <span class="n">target</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Append well model to the list of all wells on the plate.</span>
+            <span class="n">crystal_well_models</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">crystal_well_model</span><span class="p">)</span>
+
+        <span class="c1"># Here we create or update the crystal well records into xchembku.</span>
+        <span class="c1"># TODO: Make sure that direct_poll does not double-create crystal well records if scrape is re-run with a different filename path.</span>
+        <span class="k">await</span> <span class="bp">self</span><span class="o">.</span><span class="n">__xchembku</span><span class="o">.</span><span class="n">upsert_crystal_wells</span><span class="p">(</span><span class="n">crystal_well_models</span><span class="p">)</span>
+
+        <span class="c1"># Copy scraped directory to visit, replacing what might already be there.</span>
+        <span class="c1"># TODO: Handle case where we upsert the crystal_well record but then unable to copy image file.</span>
+        <span class="n">shutil</span><span class="o">.</span><span class="n">copytree</span><span class="p">(</span>
+            <span class="n">plate_directory</span><span class="p">,</span>
+            <span class="n">target</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;copied </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">subwell_names</span><span class="p">)</span><span class="si">}</span><span class="s2"> well images from plate </span><span class="si">{</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> to </span><span class="si">{</span><span class="n">target</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Remember we &quot;handled&quot; this one.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__handled_plate_names</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">plate_directory</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+<div class="viewcode-block" id="DirectPoll.ingest_well"><a class="viewcode-back" href="../../../reference/classes.html#rockingester_lib.collectors.direct_poll.DirectPoll.ingest_well">[docs]</a>    <span class="k">async</span> <span class="k">def</span> <span class="nf">ingest_well</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">plate_directory</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+        <span class="n">subwell_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">crystal_plate_model</span><span class="p">:</span> <span class="n">CrystalPlateModel</span><span class="p">,</span>
+        <span class="n">crystal_plate_object</span><span class="p">:</span> <span class="n">CrystalPlateInterface</span><span class="p">,</span>
+        <span class="n">target</span><span class="p">:</span> <span class="n">Path</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">CrystalWellModel</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Ingest the well into the database.</span>
+
+<span class="sd">        Move the well image file to the ingested area.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">input_well_filename</span> <span class="o">=</span> <span class="n">plate_directory</span> <span class="o">/</span> <span class="n">subwell_name</span>
+        <span class="n">ingested_well_filename</span> <span class="o">=</span> <span class="n">target</span> <span class="o">/</span> <span class="n">subwell_name</span>
+
+        <span class="c1"># Stems are like &quot;9acx_01A_1&quot;.</span>
+        <span class="c1"># Convert the stem into a position as shown in soakdb3.</span>
+        <span class="n">position</span> <span class="o">=</span> <span class="n">crystal_plate_object</span><span class="o">.</span><span class="n">normalize_subwell_name</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">subwell_name</span><span class="p">)</span><span class="o">.</span><span class="n">stem</span><span class="p">)</span>
+
+        <span class="n">error</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">image</span> <span class="o">=</span> <span class="n">Image</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">input_well_filename</span><span class="p">)</span>
+            <span class="n">width</span><span class="p">,</span> <span class="n">height</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">size</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exception</span><span class="p">:</span>
+            <span class="n">error</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">exception</span><span class="p">)</span>
+            <span class="n">width</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">height</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">crystal_well_model</span> <span class="o">=</span> <span class="n">CrystalWellModel</span><span class="p">(</span>
+            <span class="n">position</span><span class="o">=</span><span class="n">position</span><span class="p">,</span>
+            <span class="n">filename</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">ingested_well_filename</span><span class="p">),</span>
+            <span class="n">crystal_plate_uuid</span><span class="o">=</span><span class="n">crystal_plate_model</span><span class="o">.</span><span class="n">uuid</span><span class="p">,</span>
+            <span class="n">error</span><span class="o">=</span><span class="n">error</span><span class="p">,</span>
+            <span class="n">width</span><span class="o">=</span><span class="n">width</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="n">height</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">crystal_well_model</span></div>
+
+    <span class="c1"># ----------------------------------------------------------------------------------------</span>
+    <span class="k">async</span> <span class="k">def</span> <span class="nf">close_client_session</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;&quot;&quot;&quot;</span>
+
+        <span class="k">pass</span></div>
+</pre></div>
+
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  
+<div class="footer-article-items footer-article__inner">
+  
+    <div class="footer-article-item"><!-- Previous / next buttons -->
+<div class="prev-next-area">
+</div></div>
+  
+</div>
+
+                </footer>
+              
+            </div>
+            
+            
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="../../../_static/scripts/bootstrap.js?digest=e353d410970836974a52"></script>
+<script src="../../../_static/scripts/pydata-sphinx-theme.js?digest=e353d410970836974a52"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.3.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
