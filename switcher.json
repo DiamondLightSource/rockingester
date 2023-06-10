@@ -4,8 +4,8 @@
     "url": "https://DiamondLightSource.github.io/rockingester/main/"
   },
   {
-    "version": "3.0.4",
-    "url": "https://DiamondLightSource.github.io/rockingester/3.0.4/"
+    "version": "3.0.5",
+    "url": "https://DiamondLightSource.github.io/rockingester/3.0.5/"
   },
   {
     "version": "3.0.3",
@@ -54,5 +54,9 @@
   {
     "version": "3.0.2",
     "url": "https://DiamondLightSource.github.io/rockingester/3.0.2/"
+  },
+  {
+    "version": "3.0.4",
+    "url": "https://DiamondLightSource.github.io/rockingester/3.0.4/"
   }
 ]
